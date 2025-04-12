@@ -2,4 +2,6 @@ from pydantic import BaseModel
 
 
 class GenerateBannerRequest(BaseModel):
-	productURL: str
+    """Request body for generating a banner."""
+
+    productURL: str
