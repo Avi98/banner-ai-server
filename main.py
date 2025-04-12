@@ -1,7 +1,7 @@
 """main app"""
 
 from fastapi import FastAPI
-from routers import banner
+from routers.banner import banner
 
 
 app = FastAPI()
