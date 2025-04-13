@@ -20,6 +20,8 @@ async def generate_banner(banner: GenerateBannerRequest = Body(...)):
     2. clean data and feed llm to get UI based response, remmove all product image 
     3. provide input to all products image and prompt to gernrate banner image 
     """
-    bannerScrap = await BannerService().crawl_to_url(banner.productURL)
+    bannerScrap = BannerService()
+    scrap = await bannerScrap.crawl_to_url(banner.productURL)
+    print(scrap)
 
-    return {"message": "Banner generated successfully!", "url": banner}
+    return {"message": "Banner generated successfully!", "banner": scrap}

@@ -10,13 +10,13 @@ class BannerService:
     ):
         pass
 
-    async def crawl_to_url(self, url: str) -> WebScraper:
+    def crawl_to_url(self, url: str):
         # if not is_valid_url(url):
         #     raise ValueError("Invalid URL")
 
         scraper = WebScraper(
             url,
             "scraped_data",
-            timeout=60000,
+            timeout=3000,
         )
-        return await scraper.scrape()
+        return scraper.scrape()
