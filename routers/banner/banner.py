@@ -1,13 +1,16 @@
-"""Module providing a function printing python version."""
-
 from fastapi import APIRouter, Body
-from routers.request_types import GenerateBannerRequest
+from core.utils.logger import Logger
+from service.banner.banner_service import BannerService
+from .request_types import GenerateBannerRequest
 
 router = APIRouter()
 
+logger = Logger.get_logger()
+
 
 @router.post("/generate_banner")
-def generate_banner(banner: GenerateBannerRequest = Body(...)):
+async def generate_banner(banner: GenerateBannerRequest = Body(...)):
+    logger.info("Generating banner for product URL: %s", banner.productURL)
     """Function printing python version."""
     # url = banner.productURL
 
@@ -17,5 +20,6 @@ def generate_banner(banner: GenerateBannerRequest = Body(...)):
     2. clean data and feed llm to get UI based response, remmove all product image 
     3. provide input to all products image and prompt to gernrate banner image 
     """
+    bannerScrap = await BannerService().crawl_to_url(banner.productURL)
 
-    return {"message": "Banner generated successfully!", "url": banner.productURL}
+    return {"message": "Banner generated successfully!", "url": banner}
