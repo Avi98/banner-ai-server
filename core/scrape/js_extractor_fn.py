@@ -462,3 +462,453 @@ EXTRACT_INVENTORY_JS = """() => {
     
     return inventoryInfo;
 }"""
+
+# Function to extract contact information
+EXTRACT_CONTACT_INFO_JS = """() => {
+    const contactInfo = {
+        email: null,
+        phone: null,
+        address: null,
+        social_media: {}
+    };
+    
+    // Extract email
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/;
+    const pageText = document.body.innerText;
+    const emailMatch = pageText.match(emailRegex);
+    if (emailMatch) {
+        contactInfo.email = emailMatch[0];
+    }
+    
+    // Extract phone number
+    const phoneRegex = /(?:(?:\\+|00)[1-9][0-9]{0,2}[\\s.-]?)?(?:(?:\\(\\d{1,4}\\)|\\d{1,4})[\\s.-]?)?\\d{3}[\\s.-]?\\d{3,4}[\\s.-]?\\d{0,4}/;
+    const phoneMatch = pageText.match(phoneRegex);
+    if (phoneMatch) {
+        contactInfo.phone = phoneMatch[0];
+    }
+    
+    // Extract address from footer or contact section
+    const footerOrContact = document.querySelector('footer, .footer, #footer, .contact, #contact');
+    if (footerOrContact) {
+        const addressElements = footerOrContact.querySelectorAll('address, .address, [itemtype*="PostalAddress"]');
+        if (addressElements.length > 0) {
+            contactInfo.address = addressElements[0].textContent.trim();
+        }
+    }
+    
+    // Extract social media links
+    const socialPlatforms = {
+        'facebook.com': 'facebook',
+        'twitter.com': 'twitter',
+        'instagram.com': 'instagram',
+        'linkedin.com': 'linkedin',
+        'pinterest.com': 'pinterest',
+        'youtube.com': 'youtube',
+        'tiktok.com': 'tiktok'
+    };
+    
+    const socialLinks = document.querySelectorAll('a[href*="facebook"], a[href*="twitter"], a[href*="instagram"], a[href*="linkedin"], a[href*="pinterest"], a[href*="youtube"], a[href*="tiktok"]');
+    
+    socialLinks.forEach(link => {
+        const href = link.href;
+        for (const [domain, platform] of Object.entries(socialPlatforms)) {
+            if (href.includes(domain)) {
+                contactInfo.social_media[platform] = href;
+                break;
+            }
+        }
+    });
+    
+    return contactInfo;
+}"""
+
+# Function to extract metadata
+EXTRACT_METADATA_JS = """() => {
+    const metadata = {
+        description: document.querySelector('meta[name="description"]')?.content || null,
+        keywords: document.querySelector('meta[name="keywords"]')?.content || null,
+        author: document.querySelector('meta[name="author"]')?.content || null,
+        canonical: document.querySelector('link[rel="canonical"]')?.href || null,
+        og_tags: {},
+        twitter_tags: {},
+        schema_org: null
+    };
+    
+    // Extract Open Graph tags
+    const ogTags = document.querySelectorAll('meta[property^="og:"]');
+    ogTags.forEach(tag => {
+        const property = tag.getAttribute('property').substring(3);
+        metadata.og_tags[property] = tag.content;
+    });
+    
+    // Extract Twitter tags
+    const twitterTags = document.querySelectorAll('meta[name^="twitter:"]');
+    twitterTags.forEach(tag => {
+        const property = tag.getAttribute('name').substring(8);
+        metadata.twitter_tags[property] = tag.content;
+    });
+    
+    // Extract Schema.org structured data
+    const schemaScripts = document.querySelectorAll('script[type="application/ld+json"]');
+    if (schemaScripts.length > 0) {
+        try {
+            const schemaData = [];
+            schemaScripts.forEach(script => {
+                try {
+                    schemaData.push(JSON.parse(script.textContent));
+                } catch (e) {
+                    // Skip invalid JSON
+                }
+            });
+            metadata.schema_org = schemaData;
+        } catch (e) {
+            // Failed to parse JSON
+        }
+    }
+    
+    return metadata;
+}"""
+
+# Function to extract navigation structure
+EXTRACT_NAVIGATION_JS = """() => {
+    const nav = [];
+    const mainNav = document.querySelector('nav, .nav, .main-nav, header nav, #nav, #main-nav');
+    
+    if (mainNav) {
+        const links = mainNav.querySelectorAll('a');
+        for (const link of links) {
+            const href = link.getAttribute('href');
+            const text = link.textContent.trim();
+            
+            if (href && text && !href.startsWith('javascript:')) {
+                nav.push({
+                    text: text,
+                    url: new URL(href, window.location.origin).href
+                });
+            }
+        }
+    }
+    
+    return nav;
+}"""
+
+# Function to extract categories
+EXTRACT_CATEGORIES_JS = """() => {
+    const categories = [];
+    
+    // Check for category navigation
+    const potentialCategoryContainers = [
+        'nav', '.nav', '.navigation', '.categories', '.menu', '.navbar',
+        '[class*="category"]', '[class*="categories"]', '[class*="menu"]', '[class*="nav"]',
+        'header', 'aside', '.sidebar'
+    ];
+    
+    for (const selector of potentialCategoryContainers) {
+        const containers = document.querySelectorAll(selector);
+        for (const container of containers) {
+            // Look for links that might be categories
+            const links = container.querySelectorAll('a');
+            
+            if (links.length > 0) {
+                // Check if these might be category links (more than 2 but fewer than 20)
+                if (links.length >= 2 && links.length < 20) {
+                    for (const link of links) {
+                        const href = link.getAttribute('href') || '';
+                        const text = link.textContent.trim();
+                        
+                        // Skip empty, login, cart, and other utility links
+                        if (!text || text.length < 2) continue;
+                        if (/login|sign|cart|checkout|account|search|contact|about/i.test(text)) continue;
+                        
+                        // Check for category URL patterns
+                        if (href && (href.includes('/category/') || 
+                                href.includes('/collections/') ||
+                                href.includes('/product-category/') ||
+                                href.match(/\/c\/[\\w-]+\/?$/))) {
+                            categories.push({
+                                name: text,
+                                url: new URL(href, window.location.origin).href
+                            });
+                            continue;
+                        }
+                        
+                        // Include if it looks like a category (no symbols, not too long)
+                        if (text && text.length < 25 && !/[\\d\\W]/.test(text)) {
+                            categories.push({
+                                name: text,
+                                url: new URL(href, window.location.origin).href
+                            });
+                        }
+                    }
+                    
+                    // If we found categories, stop looking
+                    if (categories.length > 0) break;
+                }
+            }
+        }
+        
+        if (categories.length > 0) break;
+    }
+    
+    // If no categories found via navigation, check breadcrumbs
+    if (categories.length === 0) {
+        const breadcrumbs = document.querySelectorAll('.breadcrumb, .breadcrumbs, [class*="breadcrumb"]');
+        for (const breadcrumb of breadcrumbs) {
+            const links = breadcrumb.querySelectorAll('a');
+            for (const link of links) {
+                const text = link.textContent.trim();
+                if (text && text !== 'Home' && text !== 'Main') {
+                    categories.push({
+                        name: text,
+                        url: new URL(link.getAttribute('href'), window.location.origin).href
+                    });
+                }
+            }
+        }
+    }
+    
+    return categories;
+}"""
+
+# Function to extract metadata
+EXTRACT_PRODUCTS_WITH_METADATA_JS = """() => {
+                // Common product container selectors
+                const productSelectors = [
+                    ".product",
+                    ".product-card",
+                    ".product-item",
+                    ".product-container",
+                    "[data-product-id]",
+                    ".item-product",
+                    "Product",
+                    "[class*='ProductImage']", 
+                    "[class*='product-image']",
+                    "[class*='productImage']",
+                    "[class*='imageContainer']"
+                ];
+                
+                let productElements = [];
+                
+                // Try each selector until we find products
+                for (const selector of productSelectors) {
+                    const elements = document.querySelectorAll(selector);
+                    if (elements.length > 0) {
+                        productElements = Array.from(elements);
+                        break;
+                    }
+                }
+                
+                // If no products found with common selectors, try to find by structure
+                if (productElements.length === 0) {
+                    // Look for elements with images and prices (common product structure)
+                    const potentialProducts = document.querySelectorAll("*");
+                    for (const el of potentialProducts) {
+                        if (
+                            el.querySelector("img") &&
+                            (el.textContent.includes("$") ||
+                            el.textContent.match(/\\d+\\.\\d{2}/) ||
+                            el.querySelector(".price"))
+                        ) {
+                            productElements.push(el);
+                        }
+                    }
+                }
+                
+                // Process products with enhanced metadata
+                return productElements.slice(0, 20).map((productEl, index) => {
+                    // Extract product images
+                    const imgElements = productEl.querySelectorAll("img");
+                    const images = Array.from(imgElements)
+                        .map((img) => ({
+                            url: img.src || img.getAttribute('data-src') || img.getAttribute('data-lazy-src'),
+                            alt: img.alt || `Product image ${index}`,
+                            width: img.width,
+                            height: img.height,
+                        }))
+                        .filter(
+                            (img) => img.url && !img.url.includes("placeholder") && img.width > 50
+                        );
+                    
+                    // Extract product title
+                    let title = "";
+                    const titleSelectors = [
+                        "h1", "h2", "h3", "h4", ".product-title", ".title", 
+                        "[class*='product-name']", "[class*='productName']", "[class*='ProductTitle']",
+                        "[itemprop='name']"
+                    ];
+                    
+                    for (const selector of titleSelectors) {
+                        const titleEl = productEl.querySelector(selector);
+                        if (titleEl) {
+                            title = titleEl.textContent.trim();
+                            break;
+                        }
+                    }
+                    
+                    // Extract price
+                    let price = "";
+                    let salePrice = null;
+                    let regularPrice = null;
+                    
+                    const priceSelectors = [
+                        ".price", ".product-price", "[data-price]", 
+                        "[class*='price']", "[class*='Price']",
+                        "[itemprop='price']"
+                    ];
+                    
+                    for (const selector of priceSelectors) {
+                        const priceEl = productEl.querySelector(selector);
+                        if (priceEl) {
+                            price = priceEl.textContent.trim();
+                            break;
+                        }
+                    }
+                    
+                    // Check for sale price
+                    const salePriceEl = productEl.querySelector(".sale-price, .special-price, [class*='sale'], [class*='Sale']");
+                    if (salePriceEl) {
+                        salePrice = salePriceEl.textContent.trim();
+                        
+                        // Look for regular price when sale price exists
+                        const regularPriceEl = productEl.querySelector(".regular-price, .original-price, .old-price, [class*='regular'], [class*='original']");
+                        if (regularPriceEl) {
+                            regularPrice = regularPriceEl.textContent.trim();
+                        }
+                    }
+                    
+                    // Extract product description
+                    let description = "";
+                    const descSelectors = [
+                        ".description", ".product-description", "[itemprop='description']",
+                        "[class*='description']", "[class*='Description']"
+                    ];
+                    
+                    for (const selector of descSelectors) {
+                        const descEl = productEl.querySelector(selector);
+                        if (descEl) {
+                            description = descEl.textContent.trim();
+                            break;
+                        }
+                    }
+                    
+                    // Extract product category
+                    let category = "";
+                    const breadcrumbEl = document.querySelector(".breadcrumb, .breadcrumbs, [class*='breadcrumb']");
+                    if (breadcrumbEl) {
+                        const breadcrumbLinks = breadcrumbEl.querySelectorAll("a");
+                        if (breadcrumbLinks.length > 1) {
+                            category = breadcrumbLinks[breadcrumbLinks.length - 2].textContent.trim();
+                        }
+                    }
+                    
+                    // Extract SKU / Product ID
+                    let sku = productEl.dataset.productId || productEl.dataset.sku || "";
+                    if (!sku) {
+                        const skuEl = productEl.querySelector("[itemprop='sku'], .sku, [class*='sku'], [class*='SKU']");
+                        if (skuEl) {
+                            sku = skuEl.textContent.trim();
+                        }
+                    }
+                    
+                    // Extract availability
+                    let availability = "unknown";
+                    const availabilityEl = productEl.querySelector("[itemprop='availability'], .availability, .stock, [class*='stock'], [class*='Stock']");
+                    if (availabilityEl) {
+                        const availText = availabilityEl.textContent.toLowerCase();
+                        if (availText.includes("in stock") || availText.includes("available")) {
+                            availability = "in_stock";
+                        } else if (availText.includes("out of stock") || availText.includes("sold out")) {
+                            availability = "out_of_stock";
+                        } else if (availText.includes("preorder") || availText.includes("pre-order")) {
+                            availability = "preorder";
+                        }
+                    }
+                    
+                    // Extract product variants if available
+                    const variants = [];
+                    const variantSelectors = ["select.variant, select[name*='variant'], select.option, select[name*='option']"];
+                    for (const selector of variantSelectors) {
+                        const variantEl = productEl.querySelector(selector);
+                        if (variantEl) {
+                            const options = variantEl.querySelectorAll("option");
+                            options.forEach(option => {
+                                if (option.value && option.value !== "choose" && option.textContent.trim() !== "Select") {
+                                    variants.push({
+                                        name: variantEl.name || "variant",
+                                        value: option.textContent.trim(),
+                                        id: option.value
+                                    });
+                                }
+                            });
+                        }
+                    }
+                    
+                    // Check for color/size swatches
+                    const swatchContainers = productEl.querySelectorAll(".swatch, .color-swatch, .size-swatch, [class*='swatch'], [class*='Swatch']");
+                    swatchContainers.forEach(container => {
+                        const swatchType = container.className.toLowerCase().includes('color') ? 'color' : 'size';
+                        const swatches = container.querySelectorAll("a, button, [role='button'], input[type='radio']");
+                        
+                        swatches.forEach(swatch => {
+                            variants.push({
+                                name: swatchType,
+                                value: swatch.textContent.trim() || swatch.title || swatch.value || swatch.dataset.value || "",
+                                id: swatch.value || swatch.dataset.value || ""
+                            });
+                        });
+                    });
+                    
+                    // Extract product URL
+                    let url = productEl.querySelector("a")?.href || null;
+                    if (!url && productEl.tagName === "A") {
+                        url = productEl.href;
+                    }
+                    
+                    return {
+                        id: sku || productEl.dataset.productId || `product-${index}`,
+                        title: title || "Unknown Product",
+                        price: price || "N/A",
+                        sale_price: salePrice,
+                        regular_price: regularPrice,
+                        description: description,
+                        category: category,
+                        availability: availability,
+                        variants: variants.length > 0 ? variants : null,
+                        images: images.map(img => img.url),
+                        url: url ? new URL(url, window.location.origin).href : null,
+                    };
+                });
+            }"""
+
+# Function to extract currency
+EXTRACT_CURRENCY_JS = """() => {
+    // Check for currency in meta tags first
+    const currencyMeta = document.querySelector('meta[property="og:price:currency"]');
+    if (currencyMeta) return currencyMeta.content;
+    
+    // Look for currency symbols in price elements
+    const priceElements = document.querySelectorAll('.price, [class*="price"], .amount, .currency');
+    const currencySymbols = {
+        '$': 'USD', '£': 'GBP', '€': 'EUR', '¥': 'JPY', '₹': 'INR',
+        '₽': 'RUB', '₩': 'KRW', '₿': 'BTC', 'A$': 'AUD', 'C$': 'CAD'
+    };
+    
+    for (const el of priceElements) {
+        const text = el.textContent.trim();
+        for (const symbol in currencySymbols) {
+            if (text.includes(symbol)) {
+                return currencySymbols[symbol];
+            }
+        }
+        
+        // Check for currency codes
+        const currencyCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CAD'];
+        for (const code of currencyCodes) {
+            if (text.includes(code)) {
+                return code;
+            }
+        }
+    }
+    
+    return null;
+}"""
