@@ -17,6 +17,6 @@ class BannerService:
         scraper = WebScraper(
             url,
             "scraped_data",
-            timeout=3000,
+            timeout=60000,
         )
         return scraper.scrape()
