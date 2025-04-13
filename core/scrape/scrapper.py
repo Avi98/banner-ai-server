@@ -228,7 +228,7 @@ class WebScraper:
             results["products"] = await page.evaluate(EXTRACT_PRODUCTS_WITH_METADATA_JS)
 
             # Save the results to a JSON file
-            self._save_results(results)
+            # self._save_results(results)
             return results
 
         except Exception as e:
@@ -322,12 +322,12 @@ class WebScraper:
                             )
 
                             # Download using our safe method
-                            saved_path = await self.safe_download_image(
-                                page, image["url"], img_path
-                            )
-                            if saved_path:
-                                image["local_path"] = saved_path
-                                images_downloaded += 1
+                            # saved_path = await self.safe_download_image(
+                            # page, image["url"], img_path
+                            # )
+                            # if saved_path:
+                            #     image["local_path"] = saved_path
+                            #     images_downloaded += 1
 
                         except Exception as e:
                             self.logger.error(
