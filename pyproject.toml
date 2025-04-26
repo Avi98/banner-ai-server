@@ -6,10 +6,15 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi[standard]>=0.115.12",
+    "huggingface-hub>=0.30.2",
     "langchain>=0.3.23",
+    "onnxruntime>=1.21.0",
+    "opencv-python-headless>=4.11.0.86",
     "pillow>=11.2.1",
     "pydantic>=2.11.3",
     "pydantic-settings>=2.8.1",
     "pyppeteer>=2.0.0",
+    "rembg>=2.0.65",
     "requests>=2.32.3",
+    "webcolors>=24.11.1", # For optimized inference
 ]

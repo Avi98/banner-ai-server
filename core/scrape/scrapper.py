@@ -357,7 +357,7 @@ class WebScraper:
 # async def main():
 #     # scraper = WebScraper("https://digistore-uat.mintoak.com/20", "scraped_data", timeout=60000)
 #     # scraper = WebScraper("https://tech-with-tim-merch-shop.creator-spring.com/listing/coffee-code-light?product=46&variation=2742", "scraped_data", timeout=60000)
-#     # scraper = WebScraper("https://id.vyaparify.com/nxtgen-supermarket", "scraped_data", timeout=60000)
+#     # scraper = WebScraper("https://id.vyaparify.com/nxtgen-supermarket/product/pouch-with-avenger-theme-for-boys", "scraped_data", timeout=60000)
 #     scraper = WebScraper(
 #         "https://demo.vercel.store/product/acme-geometric-circles-t-shirt",
 #         "scraped_data",
