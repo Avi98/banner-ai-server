@@ -1,9 +1,7 @@
-import json
 from fastapi import APIRouter, Body
-from config.env_variables import settings
+from config.env_variables import get_settings
+from core.browser.browser import Browser, BrowserConfig
 from core.utils.logger import Logger
-from service.banner.banner_service import BannerService
-from core.agent.workflow.banner_generation_workflow import BannerGenerationWorkflow
 from .request_types import GenerateBannerRequest
 
 router = APIRouter()
@@ -14,18 +12,22 @@ logger = Logger.get_logger()
 async def generate_banner(banner: GenerateBannerRequest = Body(...)):
     logger.info("Generating banner for product URL: %s", banner.productURL)
 
-    # Scrape website data
-    bannerScrap = BannerService()
-    scrap = await bannerScrap.crawl_to_url(banner.productURL)
-    scrap_json = json.dumps({"banner": scrap})
+    async with Browser(config=BrowserConfig) as browser:
+        await browser.navigate_with_retry(url=banner.productURL)
+        if not await browser.has_content_loaded():
+            logger.error("Content did not load successfully.")
 
-    # Initialize workflow
-    workflow = BannerGenerationWorkflow(
-        hf_token=settings.hf_token,
-        model_endpoint=settings.qwen_model_endpoint,
-        sd_endpoint=settings.stable_diffusion_endpoint,
-    )
+            return {"error": "Content did not load successfully."}
+        metadata = await browser.extract_metadata()
+        if not metadata:
+            logger.error("Failed to extract metadata.")
 
-    # Generate banner
-    result = await workflow.generate(scrap_json)
-    return result
+            return {"error": "Failed to extract metadata."}
+
+        logger.info("Metadata extracted successfully.")
+        return {
+            "title": metadata["title"],
+            "description": metadata["description"],
+            "keywords": metadata["keywords"],
+            "metadata": metadata["metadata"],
+        }
