@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from importlib import resources
 from cv2 import log
 from pyppeteer import launch
+from sympy import EX
 
 from core.utils.logger import Logger
 
@@ -27,6 +28,10 @@ class BrowserConfig:
 
 
 EXTRACT_METADATA_SCRIPT = resources.read_text("core.browser.js", "extract_metadata.js")
+EXTRACT_HEADERS_SCRIPT = resources.read_text("core.browser.js", "extract_headers.js")
+EXTRACT_PRODUCT_INFO_SCRIPT = resources.read_text(
+    "core.browser.js", "extract_product_info.js"
+)
 
 
 class Browser:
@@ -114,6 +119,29 @@ class Browser:
             self.logger.error(f"Error waiting for content to load: {e}")
             return False
 
+    async def extract_headers(self):
+        """Extract headers from the page."""
+        self.logger.info("Extracting headers from the page.")
+
+        try:
+            headers = await self.page.evaluate(EXTRACT_HEADERS_SCRIPT)
+            return headers
+        except Exception as e:
+            self.logger.error(f"Error extracting headers: {e}")
+            return None
+
+    async def extract_product_info(self):
+        """Extract product information from the page."""
+
+        self.logger.info("Extracting product information from the page.")
+
+        try:
+            product_info = await self.page.evaluate(EXTRACT_PRODUCT_INFO_SCRIPT)
+            return product_info
+        except Exception as e:
+            self.logger.error(f"Error extracting product information: {e}")
+            return None
+
     async def extract_metadata(self):
         """Extract metadata from the page."""
         self.logger.info("Extracting metadata and title from the page.")
@@ -129,7 +157,7 @@ class Browser:
             metadata = await self.page.evaluate(EXTRACT_METADATA_SCRIPT)
             return {
                 "title": title,
-                "description": description,
+                "description": metadata.get("description", ""),
                 "keywords": "",
                 "metadata": metadata,
             }
