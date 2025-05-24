@@ -1,15 +1,24 @@
-from typing import Union
+"""main app"""
 
 from fastapi import FastAPI
+from core.utils.logger import Logger
+from routers.banner import banner
 
 app = FastAPI()
+logger = Logger.get_logger("banner_service", log_file="app.log")
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+def receive_signal(signalNumber, frame):
+    print("Received:", signalNumber)
+    sys.exit()
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.on_event("startup")
+async def startup_event():
+    import signal
+
+    signal.signal(signal.SIGINT, receive_signal)
+    # startup tasks
+
+
+app.include_router(banner.router, prefix="/banner")
