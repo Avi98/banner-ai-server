@@ -42,6 +42,10 @@ class ProductInfo(BaseModel):
 class ProductInfoOutput(BaseModel):
     """Product information from the llm about the product."""
 
+    is_product_page: str = Field(
+        bool,
+        description="True is banner image can be generated for the provided product information",
+    )
     product_industry: str = Field(
         str,
         description="Industry of the product (eg. fashion, electronics, home decor, stationary, beauty_and_cosmetics, food_and_beverage)",

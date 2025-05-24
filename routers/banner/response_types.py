@@ -18,7 +18,19 @@ class CrawlBannerResponse(BaseModel):
     images: list[str]
 
 
+class ProductInfoResponse(BaseModel):
+    product_imgs: list[str]
+    product_name: str
+    product_description: str
+    product_price: str
+    product_category: str
+    product_brand: str
+    product_metadata: dict
+
+
 class GetBannerPromptResponse(BaseModel):
     is_product_page: bool
-    marketing_prompt: str
-    product_info: CrawlBannerResponse
+    cpy_text: str
+    product_industry: str
+    product_template: str
+    product_info: ProductInfoResponse

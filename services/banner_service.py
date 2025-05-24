@@ -109,9 +109,12 @@ class BannerService:
                 "Product information is incomplete. Required fields are missing."
             )
 
-        metadata = generate_product_info(model=text_llm, product_info=product_info)
+        llm_response = generate_product_info(model=text_llm, product_info=product_info)
+
         return {
-            "is_product_page": "",
             "product_info": product_info,
-            "product_metadata": metadata.model_dump(),
+            "cpy_text": llm_response.cpy_text,
+            "is_product_page": llm_response.is_product_page,
+            "product_industry": llm_response.product_industry,
+            "product_template": llm_response.product_template,
         }

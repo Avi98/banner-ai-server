@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Body
 from core.utils.logger import Logger
-from routers.banner.response_types import CrawlBannerResponse
+from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
 from services.banner_service import BannerService
 from .request_types import (
     GenerateBannerRequest,
     GetBannerPromptRequest,
-    GetImgPromptRequest,
 )
 
 router = APIRouter()
@@ -22,12 +21,9 @@ async def crawl_product_page(
 @router.post("/get_banner_prompt_data")
 async def get_banner_prompt(
     product_info: GetBannerPromptRequest,
-):
+) -> GetBannerPromptResponse:
     """Generate banner response about the product."""
-    response = {}
     banner = BannerService()
 
     product_info_dump = product_info.model_dump()
-    response["metadata"] = await banner.get_product_page_info(product_info_dump)
-
-    return response
+    return await banner.get_product_page_info(product_info_dump)
