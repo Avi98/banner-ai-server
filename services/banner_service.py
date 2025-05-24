@@ -1,13 +1,12 @@
 from typing import Optional, Dict, Any, Tuple
-from core.agent.tools import generate_prompt_name
+from core.agent.product import generate_product_info
 from core.browser.browser import Browser, BrowserConfig
 from core.utils.logger import Logger
-from routers.banner.request_types import GetBannerPromptRequest, GetImgPromptRequest
-from routers.banner.response_types import CrawlBannerResponse
-from core.agent.prompt import copy_text_prompt
+from exceptions.invalid_product_info_error import InvalidProductInfoError
+from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
 from core.agent.llm import text_llm
 
-logger = Logger.get_logger()
+logger = Logger.get_logger("BannerService", ".services.banner_service")
 
 
 class BannerService:
@@ -71,50 +70,48 @@ class BannerService:
         }
 
     @staticmethod
-    async def generate_banner_prompt(
-        product_info: GetBannerPromptRequest,
-    ) -> GetImgPromptRequest:
-        """Generate banner prompt using LLM."""
-        logger.info("Generating banner image prompt.")
-
-        prompt = copy_text_prompt.format(productInfo=product_info.product_description)
-        cpy_text = generate_prompt_name(text_llm, prompt)
-
-        if not cpy_text:
-            logger.error("Failed to generate marketing prompt.")
-            return {"error": "Failed to generate marketing prompt."}
-
-        logger.info(
-            {
-                "success": True,
-                "llm_response_metadata": cpy_text.response_metadata,
-            }
-        )
-
-        return {
-            "marketing_prompt": cpy_text.content,
-            "product_info": product_info,
-        }
-
-    @staticmethod
     async def crawl_product_page(product_url: str) -> CrawlBannerResponse:
         """Main service method to crawl product page and extract information."""
         logger.info("crawling product page.")
 
         async with Browser(config=BrowserConfig) as browser:
-            # Step 1: Load the page
             if not await BannerService._extract_page_content(browser, product_url):
                 return {"error": "Content did not load successfully."}
 
-            # Step 2: Extract and validate all required data
             product_info, headers, metadata = (
                 await BannerService._extract_and_validate_data(browser)
             )
             if not all([product_info, headers, metadata]):
                 return {"error": "Failed to extract required information."}
 
-            # Step 3: Format and return the response
             logger.info("Metadata extracted successfully.")
             return BannerService._format_product_response(
                 product_info, headers, metadata
             )
+
+    async def get_product_page_info(self, product_info: dict):
+        """Check if the current page metadata is a product page."""
+        logger.info("Checking if the current page is a product page.")
+
+        if not product_info or not isinstance(product_info, dict):
+            logger.error("Invalid product information provided.")
+            raise InvalidProductInfoError(
+                "Invalid product information provided. Expected a dictionary."
+            )
+
+        has_product_info = (
+            "product_name" in product_info and "product_description" in product_info
+        )
+
+        if not has_product_info:
+            logger.error("Product information is incomplete.")
+            raise InvalidProductInfoError(
+                "Product information is incomplete. Required fields are missing."
+            )
+
+        metadata = generate_product_info(model=text_llm, product_info=product_info)
+        return {
+            "is_product_page": "",
+            "product_info": product_info,
+            "product_metadata": metadata.model_dump(),
+        }

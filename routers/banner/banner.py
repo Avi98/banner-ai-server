@@ -22,10 +22,12 @@ async def crawl_product_page(
 @router.post("/get_banner_prompt_data")
 async def get_banner_prompt(
     product_info: GetBannerPromptRequest,
-) -> GetImgPromptRequest:
-    return await BannerService.generate_banner_prompt(product_info)
+):
+    """Generate banner response about the product."""
+    response = {}
+    banner = BannerService()
 
+    product_info_dump = product_info.model_dump()
+    response["metadata"] = await banner.get_product_page_info(product_info_dump)
 
-@router.post("/get_banner_image")
-async def get_banner_image_prompt():
-    logger.info("Generating banner image prompt.")
+    return response
