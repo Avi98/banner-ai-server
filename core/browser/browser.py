@@ -148,9 +148,6 @@ class Browser:
 
         try:
             title = await self.page.evaluate("document.title")
-            description = await self.page.evaluate(
-                "document.querySelector('meta[name=\"description\"]').content"
-            )
             # keywords = await self.page.evaluate(
             #     "document.querySelector('meta[name=\"keywords\"]').content"
             # )
