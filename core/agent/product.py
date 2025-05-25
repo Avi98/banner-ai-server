@@ -1,6 +1,6 @@
 from langchain_openai import ChatOpenAI
 from core.agent.types import ProductInfoOutput, ProductMetadata
-from core.agent.prompt import product_metadata_template
+from core.agent.banner_prompt import product_metadata_template
 
 
 def generate_prompt_name(model: ChatOpenAI, prompt: str):

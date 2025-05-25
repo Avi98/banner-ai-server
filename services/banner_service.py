@@ -3,8 +3,10 @@ from core.agent.product import generate_product_info
 from core.browser.browser import Browser, BrowserConfig
 from core.utils.logger import Logger
 from exceptions.invalid_product_info_error import InvalidProductInfoError
+from routers.banner.request_types import Platform
 from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
 from core.agent.llm import text_llm
+from utils.consts import EIGHT_MB
 
 logger = Logger.get_logger("BannerService", ".services.banner_service")
 
@@ -118,3 +120,32 @@ class BannerService:
             "product_industry": llm_response.product_industry,
             "product_template": llm_response.product_template,
         }
+
+    async def create_og_banner(
+        self,
+        size: Tuple[int, int] = (1200, 630),
+        max_size: str = EIGHT_MB,
+        platform: list[Platform] = [
+            Platform.FACEBOOK,
+            Platform.INSTAGRAM,
+            Platform.WHATSAPP,
+        ],
+        **product_info,
+    ):
+        """Generate an banner with the given product information and size for requested platforms."""
+        logger.info("Creating OG banner with product information.")
+
+        if not product_info or not isinstance(product_info, dict):
+            logger.error("Invalid product information provided.")
+            raise InvalidProductInfoError(
+                "Invalid product information provided. Expected a dictionary."
+            )
+
+        if not all(
+            key in product_info
+            for key in ["product_name", "product_description", "product_imgs"]
+        ):
+            logger.error("Product information is incomplete.")
+            raise InvalidProductInfoError(
+                "Product information is incomplete. Required fields are missing."
+            )

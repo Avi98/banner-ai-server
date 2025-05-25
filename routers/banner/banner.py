@@ -3,7 +3,8 @@ from core.utils.logger import Logger
 from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
 from services.banner_service import BannerService
 from .request_types import (
-    GenerateBannerRequest,
+    CrawlProductPageRequest,
+    CreateOGBanner,
     GetBannerPromptRequest,
 )
 
@@ -13,7 +14,7 @@ logger = Logger.get_logger()
 
 @router.post("/crawl_product_page")
 async def crawl_product_page(
-    banner: GenerateBannerRequest = Body(...),
+    banner: CrawlProductPageRequest = Body(...),
 ) -> CrawlBannerResponse:
     return await BannerService.crawl_product_page(banner.productURL)
 
@@ -27,3 +28,20 @@ async def get_banner_prompt(
 
     product_info_dump = product_info.model_dump()
     return await banner.get_product_page_info(product_info_dump)
+
+
+@router.post("/create_product_og_banner")
+async def create_product_og_banner(
+    og_banner_info: CreateOGBanner,
+) -> GetBannerPromptResponse:
+    """Generate banner response about the product."""
+    banner = BannerService()
+
+    product_info = og_banner_info.product_info.model_dump()
+    return await banner.create_og_banner(
+        size=og_banner_info.size,
+        platform=og_banner_info.platforms,
+        max_size=og_banner_info.max_file_size,
+        aspect_ratio=og_banner_info.aspect_ratio,
+        **product_info,
+    )

@@ -1,10 +1,14 @@
+from enum import Enum
 from pydantic import BaseModel
-from typing import Tuple
+from typing import Any, Tuple
+
+from utils.consts import EIGHT_MB
 
 
-class GenerateBannerRequest(BaseModel):
-
-    productURL: str
+class Platform(str, Enum):
+    FACEBOOK = "facebook"
+    INSTAGRAM = "INSTAGRAM"
+    WHATSAPP = "WHATSAPP"
 
 
 class CrawlProductPageRequest(BaseModel):
@@ -26,3 +30,11 @@ class GetImgPromptRequest(BaseModel):
     banner_style: str
     banner_size: Tuple[int, int] = (500, 500)  # (width, height)
     product_metadata: dict
+
+
+class CreateOGBanner(BaseModel):
+    size: Tuple[int, int] = (1200, 630)
+    aspect_ratio: str = "1.91.1"
+    max_file_size: str = EIGHT_MB
+    platforms: list[Platform]
+    product_info: GetImgPromptRequest
