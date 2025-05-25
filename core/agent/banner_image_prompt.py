@@ -1,0 +1,50 @@
+# product industry: electronics prompts
+electronics_prompt_basic = """
+	Create a futuristic tech product banner image optimized for {platform}.
+	Use a dark neon-purple background with glowing triangle designs.
+
+	Place the uploaded product image (image 1) prominently on the right.
+	Headline (bold, neon): "{headline_text}"
+	Subheadline: "{subheadline_text}"
+
+	Features:
+	- {feature_1}
+	- {feature_2}
+	- {feature_3}
+
+	Add pricing: "{price_text}"
+	Offer text: "{offer_text}"
+	Include website: {website_url}
+"""
+
+electronics_prompt_without_logo = """
+	Design a modern and clean eCommerce sale banner for a promotional electronics event.
+
+	**Platform:** {platform}
+	**Image Size:** 1200x628 pixels (under 8MB)
+
+	### Style & Background:
+	- Use a smooth, gradient blue background with abstract shapes, waves, and clean modern design elements.
+	- Place a curved yellow accent on the left and right sides to add vibrance.
+	- Keep the design minimal, friendly, and professional.
+
+	### Product Layout:
+	- Display multiple electronic appliances (image 1) prominently on the right side: refrigerator, TV, tablet, camera, printer, remote, and air cooler.
+	- Arrange the products in a group, slightly overlapping with subtle shadows.
+	- Make sure image 1 blends seamlessly into the scene.
+
+	### Text Content (on the left side):
+	- Top Tagline: "{tagline}"
+	- Highlighted Main Title:
+	- "{main_title_emphasis}" (in white bold caps with yellow background)
+	- "{main_title_rest}" (in blue bold caps)
+	- Sale Dates: "{sale_dates}"
+	- Discount Message: "{discount_text}" (bold and circular layout near bottom left)
+	- Use clean, bold fonts; align text vertically with good spacing.
+
+	### Branding:
+	- No specific logo required
+	- Website or brand name can be added at the bottom if space allows.
+
+	Ensure the banner is professional, engaging, and ready for {platform} ad campaigns.
+"""

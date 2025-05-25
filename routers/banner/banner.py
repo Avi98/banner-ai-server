@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body
 from core.utils.logger import Logger
 from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
 from services.banner_service import BannerService
+from services.upload_product import ProductImage
 from .request_types import (
     CrawlProductPageRequest,
     CreateOGBanner,
@@ -33,9 +34,11 @@ async def get_banner_prompt(
 @router.post("/create_product_og_banner")
 async def create_product_og_banner(
     og_banner_info: CreateOGBanner,
-) -> GetBannerPromptResponse:
+):
+    product_client = ProductImage()
+
     """Generate banner response about the product."""
-    banner = BannerService()
+    banner = BannerService(productImg=product_client)
 
     product_info = og_banner_info.product_info.model_dump()
     return await banner.create_og_banner(

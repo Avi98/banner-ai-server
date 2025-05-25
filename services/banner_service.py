@@ -6,12 +6,21 @@ from exceptions.invalid_product_info_error import InvalidProductInfoError
 from routers.banner.request_types import Platform
 from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
 from core.agent.llm import text_llm
+from services.upload_product import ProductImage
+from services.utils.donload_files import download_files
 from utils.consts import EIGHT_MB
 
 logger = Logger.get_logger("BannerService", ".services.banner_service")
 
 
+TEMP_IMAGE_DIR = "./temp_product_images"
+
+
 class BannerService:
+
+    def __init__(self, productImg: ProductImage):
+        self.product_img_client: ProductImage = productImg
+
     @staticmethod
     async def _extract_page_content(browser: Browser, url: str) -> bool:
         """Navigate to URL and verify content loading."""
@@ -121,6 +130,25 @@ class BannerService:
             "product_template": llm_response.product_template,
         }
 
+    def _check_valid_og_banner_info(self, product_info: dict):
+        """Check if the provided product information is valid for OG banner generation."""
+
+        if not product_info or not isinstance(product_info, dict):
+            logger.error("Invalid product information provided.")
+            raise InvalidProductInfoError(
+                "Invalid product information provided. Expected a dictionary."
+            )
+
+        if not all(
+            key in product_info
+            for key in ["product_name", "product_description", "product_images"]
+        ):
+            logger.error("Product information is incomplete.")
+            raise InvalidProductInfoError(
+                "Product information is incomplete. Required fields are missing."
+            )
+        return True
+
     async def create_og_banner(
         self,
         size: Tuple[int, int] = (1200, 630),
@@ -133,19 +161,21 @@ class BannerService:
         **product_info,
     ):
         """Generate an banner with the given product information and size for requested platforms."""
+
         logger.info("Creating OG banner with product information.")
 
-        if not product_info or not isinstance(product_info, dict):
-            logger.error("Invalid product information provided.")
-            raise InvalidProductInfoError(
-                "Invalid product information provided. Expected a dictionary."
+        # if not self._check_valid_og_banner_info(product_info):
+        #     return None
+
+        try:
+            product_image = download_files(
+                product_info.get("product_images"), TEMP_IMAGE_DIR
             )
 
-        if not all(
-            key in product_info
-            for key in ["product_name", "product_description", "product_imgs"]
-        ):
-            logger.error("Product information is incomplete.")
-            raise InvalidProductInfoError(
-                "Product information is incomplete. Required fields are missing."
-            )
+            for product in product_image:
+                self.product_img_client.uploadImg(product.get("file_path"))
+
+            return self.product_img_client.file_ids
+
+        except Exception as e:
+            raise e
