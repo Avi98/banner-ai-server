@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Any, Tuple
+from typing import Any, Tuple, Optional
 
 from utils.consts import EIGHT_MB
 
@@ -26,7 +26,10 @@ class GetBannerPromptRequest(BaseModel):
 
 
 class GetImgPromptRequest(BaseModel):
-    product_images: list[str]
+    product_image: list[str]
+    product_name: Optional[str] = ""
+    product_title: Optional[str] = ""
+    product_description: Optional[str] = ""
     banner_style: str
     banner_size: Tuple[int, int] = (500, 500)  # (width, height)
     product_metadata: dict

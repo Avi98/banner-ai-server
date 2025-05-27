@@ -42,6 +42,14 @@ def download_files(urls: list[str], destination: str) -> list[Dict[str, str]]:
     return downloaded_files_paths
 
 
+def save_files(out_dir: str, file_name: str, img_bytes):
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    with open(f"{out_dir}/{file_name}", "wb") as f:
+        f.write(img_bytes)
+
+
 def cleanup_files(path: str):
     # Delete files that has image
     pass

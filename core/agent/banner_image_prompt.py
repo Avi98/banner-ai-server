@@ -1,3 +1,6 @@
+from langchain_core.prompts import PromptTemplate
+from routers.banner.request_types import Platform
+
 # product industry: electronics prompts
 electronics_prompt_basic = """
 	Create a futuristic tech product banner image optimized for {platform}.
@@ -17,7 +20,15 @@ electronics_prompt_basic = """
 	Include website: {website_url}
 """
 
-electronics_prompt_without_logo = """
+
+def electronics_prompts(
+    platform: Platform,
+    tagline: str,
+    main_title_emphasis: str,
+    sales_dates: str,
+    discount_text: str,
+):
+    electronics_prompt_without_logo = """
 	Design a modern and clean eCommerce sale banner for a promotional electronics event.
 
 	**Platform:** {platform}
@@ -48,3 +59,14 @@ electronics_prompt_without_logo = """
 
 	Ensure the banner is professional, engaging, and ready for {platform} ad campaigns.
 """
+
+    prompt_template = PromptTemplate.from_template(electronics_prompt_without_logo)
+    variables = {
+        "platform": platform,
+        "tagline": tagline,
+        "main_title_emphasis": main_title_emphasis,
+        "sale_dates": sales_dates,
+        "discount_text": discount_text,
+        "main_title_rest": "",
+    }
+    return prompt_template.invoke(variables)

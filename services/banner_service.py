@@ -1,4 +1,5 @@
 from typing import Optional, Dict, Any, Tuple
+from core.agent.banner_image_prompt import electronics_prompts
 from core.agent.product import generate_product_info
 from core.browser.browser import Browser, BrowserConfig
 from core.utils.logger import Logger
@@ -7,13 +8,13 @@ from routers.banner.request_types import Platform
 from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
 from core.agent.llm import text_llm
 from services.upload_product import ProductImage
-from services.utils.donload_files import download_files
 from utils.consts import EIGHT_MB
 
 logger = Logger.get_logger("BannerService", ".services.banner_service")
 
 
 TEMP_IMAGE_DIR = "./temp_product_images"
+TEMP_BANNER_DIR = "./temp_product_images"
 
 
 class BannerService:
@@ -167,15 +168,21 @@ class BannerService:
         # if not self._check_valid_og_banner_info(product_info):
         #     return None
 
-        try:
-            product_image = download_files(
-                product_info.get("product_images"), TEMP_IMAGE_DIR
-            )
+        saved_img = self.product_img_client.save_img_files(
+            product_info.get("product_image"), TEMP_IMAGE_DIR
+        )
 
-            for product in product_image:
-                self.product_img_client.uploadImg(product.get("file_path"))
+        prompt_args = {
+            "tagline": product_info.get("product_name"),
+            "main_title_emphasis": product_info.get("product_name"),
+            "sales_dates": product_info.get("product_sales", "none"),
+            "discount_text": "None",
+            "platform": platform,
+        }
+        prompt_template = electronics_prompts(**prompt_args)
 
-            return self.product_img_client.file_ids
-
-        except Exception as e:
-            raise e
+        self.product_img_client.get_image_file(
+            img_paths=[img_path.get("file_path") for img_path in saved_img],
+            prompt=prompt_template.to_string(),
+            out_dir=TEMP_BANNER_DIR,
+        )
