@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any, Tuple
-from core.agent.banner_image_prompt import electronics_prompts
+from core.prompt.banner_image_prompt import electronics_prompts
 from core.agent.product import generate_product_info
 from core.browser.browser import Browser, BrowserConfig
 from core.utils.logger import Logger
