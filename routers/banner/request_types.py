@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import BaseModel
 from typing import Any, Tuple, Optional
 
-from utils.consts import EIGHT_MB
+from utils.consts import EIGHT_MB, EIGHT_SECONDS_MS
 
 
 class Platform(str, Enum):
@@ -35,9 +35,15 @@ class GetImgPromptRequest(BaseModel):
     product_metadata: dict
 
 
-class CreateOGBanner(BaseModel):
+class CreateOGBannerRequest(BaseModel):
     size: Tuple[int, int] = (1200, 630)
     aspect_ratio: str = "1.91.1"
     max_file_size: str = EIGHT_MB
     platforms: list[Platform]
     product_info: GetImgPromptRequest
+
+
+class CreateVedioScriptRequest(BaseModel):
+    product_info: GetImgPromptRequest
+    aspect_ratio: str
+    duration: str = EIGHT_SECONDS_MS

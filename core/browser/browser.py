@@ -2,9 +2,7 @@ import asyncio
 from typing import List
 from dataclasses import dataclass, field
 from importlib import resources
-from cv2 import log
-from pyppeteer import launch
-from sympy import EX
+from playwright.async_api import async_playwright, Browser as PlaywrightBrowser, Page
 
 from core.utils.logger import Logger
 
@@ -22,7 +20,7 @@ class BrowserConfig:
     viewport_size: ViewportSize = field(default=ViewportSize(width=1920, height=1080))
     detector: List[str] = None
     headless: bool = True
-    browser_type: str = "chrome"
+    browser_type: str = "chromium"
     ignoreHTTPSErrors: bool = True
     timeout: int = 30000
 
@@ -39,6 +37,9 @@ class Browser:
         logger.info(f"Initializing browser.")
         self.config = config
         self.logger = logger
+        self.playwright = None
+        self.browser: PlaywrightBrowser = None
+        self.page: Page = None
 
     async def __aenter__(self):
         """Initialize the browser and return the instance."""
@@ -51,37 +52,42 @@ class Browser:
 
     async def _init_browser(self):
         """Initialize the browser."""
-        self.browser = await launch(
+        self.playwright = await async_playwright().start()
+        browser_context = getattr(self.playwright, self.config.browser_type)
+        self.browser = await browser_context.launch(
             headless=self.config.headless,
-            ignoreHTTPSErrors=self.config.ignoreHTTPSErrors,
-            timeout=self.config.timeout,
             args=[
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
                 "--disable-gpu",
                 "--disable-web-security",  # May help with some CORS issues
                 "--disable-features=IsolateOrigins,site-per-process",  # May help with frame issues
             ],
         )
-        self.page = await self.browser.newPage()
-        await self.page.setViewport(self.config.viewport_size.__dict__)
-        await self.page.setUserAgent(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        self.page = await self.browser.new_page(
+            viewport=self.config.viewport_size.__dict__,
+            java_script_enabled=True,
+            ignore_https_errors=self.config.ignoreHTTPSErrors,
         )
-        await self.page.setJavaScriptEnabled(True)
-        self.page.setDefaultNavigationTimeout(0)
+        await self.page.set_extra_http_headers(
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+        )
 
     async def _close_browser(self):
         """Close the browser."""
+        if self.page:
+            await self.page.close()
+            self.page = None
+
         if self.browser:
             await self.browser.close()
+            self.browser = None
 
-            self.logger.info("Browser closed.")
-        else:
-            self.logger.warning("Browser was not initialized.")
-        self.browser = None
-        self.page = None
+        if self.playwright:
+            await self.playwright.stop()
+            self.playwright = None
+
+        self.logger.info("Browser closed.")
         self.logger = None
 
     async def navigate_with_retry(self, url: str, max_retries: int = 3):
@@ -93,13 +99,11 @@ class Browser:
                 )
                 response = await self.page.goto(
                     url,
-                    waitUntil=["networkidle2", "domcontentloaded"],
+                    wait_until="networkidle",
                     timeout=self.config.timeout,
                 )
-                # logger.info(f"Page response: {pageresponse.status}")
-                if response.status == 200:
+                if response.ok:
                     break
-
                 await asyncio.sleep(1.5)  # Wait for a second to allow the page to load
 
             except Exception as e:
@@ -110,9 +114,8 @@ class Browser:
     async def has_content_loaded(self, detector: List[str] = None):
         """Check if the content has loaded."""
         try:
-            # await self.page.wait_for_content_loaded(page=self.page)
-            await self.page.waitForSelector("img", {"visible": True})
-            await self.page.waitForSelector("body", timeout=self.config.timeout)
+            await self.page.wait_for_selector("img", state="visible")
+            await self.page.wait_for_selector("body", timeout=self.config.timeout)
             self.logger.info("Content loaded successfully.")
             return True
         except Exception as e:
@@ -132,7 +135,6 @@ class Browser:
 
     async def extract_product_info(self):
         """Extract product information from the page."""
-
         self.logger.info("Extracting product information from the page.")
 
         try:
@@ -147,10 +149,7 @@ class Browser:
         self.logger.info("Extracting metadata and title from the page.")
 
         try:
-            title = await self.page.evaluate("document.title")
-            # keywords = await self.page.evaluate(
-            #     "document.querySelector('meta[name=\"keywords\"]').content"
-            # )
+            title = await self.page.title()
             metadata = await self.page.evaluate(EXTRACT_METADATA_SCRIPT)
             return {
                 "title": title,
