@@ -53,15 +53,17 @@ class Browser:
     async def _init_browser(self):
         """Initialize the browser."""
         self.playwright = await async_playwright().start()
-        browser_context = getattr(self.playwright, self.config.browser_type)
-        self.browser = await browser_context.launch(
-            headless=self.config.headless,
+
+        # browser_context = getattr(self.playwright, self.config.browser_type)
+        self.browser = await self.playwright.chromium.launch(
+            headless=True,
             args=[
                 "--disable-gpu",
                 "--disable-web-security",  # May help with some CORS issues
                 "--disable-features=IsolateOrigins,site-per-process",  # May help with frame issues
             ],
         )
+
         self.page = await self.browser.new_page(
             viewport=self.config.viewport_size.__dict__,
             java_script_enabled=True,
