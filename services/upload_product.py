@@ -1,14 +1,18 @@
 from encodings.base64_codec import base64_decode
-from openai import OpenAI
-from core.agent.llm import openai_client
+from core.model.llm import initialize_gemini
+from core.utils.logger import Logger
 from services.utils.donload_files import download_files, save_files
 
 
 # TODO: change this with statement in context with finally as removing the files
 class ProductImage:
 
-    client: OpenAI = openai_client
     file_ids: list[dict[str, str]]
+    logger: Logger
+
+    def __init__(self):
+        self.logger = Logger(__name__)
+        self.client = initialize_gemini
 
     def uploadImg(self, imgPaths: list[str]):
         with open(imgPaths, "rb") as product_content:
@@ -29,15 +33,9 @@ class ProductImage:
 
     def get_image_file(self, img_paths: list[str], prompt: str, out_dir: str):
         try:
-            result = self.client.images.edit(
-                model="gpt-image-1",
-                image=[open(refId, "rb") for refId in img_paths],
-                prompt=prompt,
-                n=1,
-            )
-            img_base64 = result.data[0].b64_json
-            img_byes = base64_decode(img_base64)
 
+            img_client = self.client({"prompt": prompt})
+            return
             save_files(out_dir, file_name="sample_banner_1", img_bytes=img_byes)
 
         except Exception as e:

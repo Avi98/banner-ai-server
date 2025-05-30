@@ -6,7 +6,7 @@ from core.utils.logger import Logger
 from exceptions.invalid_product_info_error import InvalidProductInfoError
 from routers.banner.request_types import Platform
 from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
-from core.agent.llm import text_llm
+from core.model.llm import text_llm
 from services.upload_product import ProductImage
 from utils.consts import EIGHT_MB
 
