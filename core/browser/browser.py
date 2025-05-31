@@ -129,7 +129,7 @@ class Browser:
     async def has_content_loaded(self, detector: List[str] = None):
         """Check if the content has loaded."""
         try:
-            await self.page.wait_for_selector("img", state="visible")
+            # await self.page.wait_for_selector("img", state="visible")
             await self.page.wait_for_selector("body", timeout=self.config.timeout)
             self.logger.info("Content loaded successfully.")
             return True

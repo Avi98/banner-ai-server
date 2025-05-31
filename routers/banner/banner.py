@@ -3,14 +3,13 @@ from fastapi import APIRouter, Body
 from core.agent.product_agent import ProductAgent
 from core.model.llm import initialize_gemini
 from core.utils.logger import Logger
-from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
+from routers.banner.response_types import CrawlBannerResponse
 from services.banner_service import BannerService
 from services.upload_product import ProductImage
 from .request_types import (
     CrawlProductPageRequest,
     CreateOGBannerRequest,
     CreateVedioScriptRequest,
-    GetBannerPromptRequest,
 )
 
 router = APIRouter()
@@ -28,22 +27,10 @@ def test():
 @router.post("/crawl_product_page")
 async def crawl_product_page(
     banner: CrawlProductPageRequest = Body(...),
-) -> CrawlBannerResponse:
+):
 
     agent = ProductAgent()
     return await BannerService.get_product_info(banner.productURL, agent)
-
-
-# step 2
-@router.post("/get_banner_prompt_data")
-async def get_banner_prompt(
-    product_info: GetBannerPromptRequest,
-) -> GetBannerPromptResponse:
-    """Generate banner response about the product."""
-    banner = BannerService()
-
-    product_info_dump = product_info.model_dump()
-    return await banner.get_product_page_info(product_info_dump)
 
 
 @router.post("/create_product_og_banner")

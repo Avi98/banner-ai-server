@@ -84,8 +84,8 @@ class CrawlBannerResponse(BaseModel):
     """
 
     banner_url: str
-    headers: Dict[str, str]
-    metadata: Metadata
+    headers: Optional[Dict[str, str]]
+    metadata: Optional[Metadata]
     product_info: ProductDetails
 
 
@@ -97,11 +97,3 @@ class ProductInfoResponse(BaseModel):
     product_category: str
     product_brand: str
     product_metadata: dict
-
-
-class GetBannerPromptResponse(BaseModel):
-    is_product_page: bool
-    cpy_text: str
-    product_industry: str
-    product_template: str
-    product_info: ProductInfoResponse

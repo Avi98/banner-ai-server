@@ -5,11 +5,6 @@ from config.env_variables import get_settings
 from google import genai
 
 
-# TODO: file should be renamed to llm clients,
-text_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0, max_tokens=2000)
-openai_client = OpenAI()
-
-
 def initialize_gemini(content=None, config=None):
     """initialize gemini llm and returns model instance"""
 

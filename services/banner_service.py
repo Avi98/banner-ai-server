@@ -1,17 +1,12 @@
-from importlib import metadata
 from typing import Dict, Any, Tuple, Union
 from core.agent.product_agent import ProductAgent
 from core.prompt.banner_image_prompt import electronics_prompts
-from core.agent.product import generate_product_info
 from core.utils.logger import Logger
 from exceptions.invalid_product_info_error import InvalidProductInfoError
 from routers.banner.request_types import Platform
-from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
-from core.model.llm import text_llm
+from routers.banner.response_types import CrawlBannerResponse
 from services.upload_product import ProductImage
 from utils.consts import EIGHT_MB
-
-logger = Logger.get_logger("BannerService", ".services.banner_service")
 
 
 TEMP_IMAGE_DIR = "./temp_product_images"
@@ -24,6 +19,9 @@ class BannerService:
 
     def __init__(self, productImg: ProductImage):
         self.product_img_client: ProductImage = productImg
+        self.logger = Logger.get_logger(
+            name=__class__,
+        )
 
     @staticmethod
     async def get_product_info(
@@ -74,47 +72,11 @@ class BannerService:
             },
         }
 
-    @staticmethod
-    async def crawl_product_page(product_url: str) -> CrawlBannerResponse:
-        """Main service method to crawl product page and extract information."""
-
-        logger.info("crawling product page.")
-
-    async def get_product_page_info(self, product_info: dict):
-        """Check if the current page metadata is a product page."""
-        logger.info("Checking if the current page is a product page.")
-
-        if not product_info or not isinstance(product_info, dict):
-            logger.error("Invalid product information provided.")
-            raise InvalidProductInfoError(
-                "Invalid product information provided. Expected a dictionary."
-            )
-
-        has_product_info = (
-            "product_name" in product_info and "product_description" in product_info
-        )
-
-        if not has_product_info:
-            logger.error("Product information is incomplete.")
-            raise InvalidProductInfoError(
-                "Product information is incomplete. Required fields are missing."
-            )
-
-        llm_response = generate_product_info(model=text_llm, product_info=product_info)
-
-        return {
-            "product_info": product_info,
-            "cpy_text": llm_response.cpy_text,
-            "is_product_page": llm_response.is_product_page,
-            "product_industry": llm_response.product_industry,
-            "product_template": llm_response.product_template,
-        }
-
     def _check_valid_og_banner_info(self, product_info: dict):
         """Check if the provided product information is valid for OG banner generation."""
 
         if not product_info or not isinstance(product_info, dict):
-            logger.error("Invalid product information provided.")
+            self.logger.error("Invalid product information provided.")
             raise InvalidProductInfoError(
                 "Invalid product information provided. Expected a dictionary."
             )
@@ -123,7 +85,7 @@ class BannerService:
             key in product_info
             for key in ["product_name", "product_description", "product_images"]
         ):
-            logger.error("Product information is incomplete.")
+            self.logger.error("Product information is incomplete.")
             raise InvalidProductInfoError(
                 "Product information is incomplete. Required fields are missing."
             )
@@ -142,7 +104,7 @@ class BannerService:
     ):
         """Generate an banner with the given product information and size for requested platforms."""
 
-        logger.info("Creating OG banner with product information.")
+        self.logger.info("Creating OG banner with product information.")
 
         # if not self._check_valid_og_banner_info(product_info):
         #     return None
