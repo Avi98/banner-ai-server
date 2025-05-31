@@ -1,25 +1,40 @@
+from typing import Any
 from fastapi import APIRouter, Body
+from core.agent.product_agent import ProductAgent
+from core.model.llm import initialize_gemini
 from core.utils.logger import Logger
 from routers.banner.response_types import CrawlBannerResponse, GetBannerPromptResponse
 from services.banner_service import BannerService
 from services.upload_product import ProductImage
 from .request_types import (
     CrawlProductPageRequest,
-    CreateOGBanner,
+    CreateOGBannerRequest,
+    CreateVedioScriptRequest,
     GetBannerPromptRequest,
 )
 
 router = APIRouter()
-logger = Logger.get_logger()
 
 
+@router.get("/test-llm")
+def test():
+    # llm = initialize_imagen()
+    llm = initialize_gemini()
+    # model: Any = llm.invoke("can A dog reading a newspaper")
+    return llm
+
+
+# step 1
 @router.post("/crawl_product_page")
 async def crawl_product_page(
     banner: CrawlProductPageRequest = Body(...),
 ) -> CrawlBannerResponse:
-    return await BannerService.crawl_product_page(banner.productURL)
+
+    agent = ProductAgent()
+    return await BannerService.get_product_info(banner.productURL, agent)
 
 
+# step 2
 @router.post("/get_banner_prompt_data")
 async def get_banner_prompt(
     product_info: GetBannerPromptRequest,
@@ -33,11 +48,12 @@ async def get_banner_prompt(
 
 @router.post("/create_product_og_banner")
 async def create_product_og_banner(
-    og_banner_info: CreateOGBanner,
+    og_banner_info: CreateOGBannerRequest,
 ):
+    """Generate banner response about the product."""
+
     product_client = ProductImage()
 
-    """Generate banner response about the product."""
     banner = BannerService(productImg=product_client)
 
     product_info = og_banner_info.product_info.model_dump()
@@ -48,3 +64,10 @@ async def create_product_og_banner(
         aspect_ratio=og_banner_info.aspect_ratio,
         **product_info,
     )
+
+
+@router.post("generate_vedio_script")
+async def create_vedio_script(vedio_script_req: CreateVedioScriptRequest):
+    """Create a vedio script for the product"""
+
+    pass

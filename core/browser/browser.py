@@ -1,9 +1,12 @@
 import asyncio
+import base64
+from turtle import width
 from typing import List
 from dataclasses import dataclass, field
 from importlib import resources
 from playwright.async_api import async_playwright, Browser as PlaywrightBrowser, Page
-
+from PIL import Image
+from core.browser.utils import scale_b64_image
 from core.utils.logger import Logger
 
 logger = Logger.get_logger(name="browser", level="DEBUG")
@@ -15,9 +18,10 @@ class ViewportSize:
     height: int
 
 
+# ViewportSize(width=1920, height=1080)
 @dataclass
 class BrowserConfig:
-    viewport_size: ViewportSize = field(default=ViewportSize(width=1920, height=1080))
+    viewport_size: tuple[int, int] = field(default_factory=lambda: (1920, 1080))
     detector: List[str] = None
     headless: bool = True
     browser_type: str = "chromium"
@@ -40,6 +44,7 @@ class Browser:
         self.playwright = None
         self.browser: PlaywrightBrowser = None
         self.page: Page = None
+        self._cdp_session = None
 
     async def __aenter__(self):
         """Initialize the browser and return the instance."""
@@ -64,11 +69,15 @@ class Browser:
             ],
         )
 
+        viewport_height, viewport_width = self.config.viewport_size
+
         self.page = await self.browser.new_page(
-            viewport=self.config.viewport_size.__dict__,
+            viewport={"width": viewport_width, "height": viewport_height},
             java_script_enabled=True,
             ignore_https_errors=self.config.ignoreHTTPSErrors,
         )
+
+        self._cdp_session = await self.browser.new_browser_cdp_session()
         await self.page.set_extra_http_headers(
             {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -162,3 +171,41 @@ class Browser:
         except Exception as e:
             self.logger.error(f"Error extracting metadata: {e}")
             return None
+
+    async def get_cdp_session(self):
+        """Get or create cdp session"""
+
+        if (
+            self._cdp_session is None
+            or not hasattr(self._cdp_session, "_page")
+            or self._cdp_session._page != self.current_page
+        ):
+            self._cdp_session = await self.context.new_cdp_session(self.current_page)
+            # Store reference to the page this session belongs to
+            self._cdp_session._page = self.current_page
+        return self._cdp_session
+
+    async def get_screenshot(self):
+        """Returns base64 encoded screenshot of the current page"""
+
+        cdp_session = await self.get_cdp_session()
+        screenshot_params = {
+            "format": "png",
+            "fromSurface": False,
+            "captureBeyondViewPort": False,
+        }
+
+        screenshot_data = await cdp_session.send(
+            "Page.captureScreenshot", screenshot_params
+        )
+        screenshot_b64 = screenshot_data["data"]
+        if self.screenshot_scale_factor is None:
+
+            test_img_data = base64.b64decode(screenshot_b64)
+            test_img = Image.open(io.BytesIO(test_img_data))
+            logger.info(f"Test image size: {test_img.size}")
+            self.screenshot_scale_factor = 1024 / test_img.size[0]
+            logger.info(f"Screenshot scale factor: {self.screenshot_scale_factor}")
+
+        screenshot_b64 = scale_b64_image(screenshot_b64, self.screenshot_scale_factor)
+        return screenshot_b64
