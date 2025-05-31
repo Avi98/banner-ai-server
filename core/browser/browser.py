@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import io
 from turtle import width
 from typing import List
 from dataclasses import dataclass, field
@@ -8,8 +9,6 @@ from playwright.async_api import async_playwright, Browser as PlaywrightBrowser,
 from PIL import Image
 from core.browser.utils import scale_b64_image
 from core.utils.logger import Logger
-
-logger = Logger.get_logger(name="browser", level="DEBUG")
 
 
 @dataclass
@@ -38,6 +37,8 @@ EXTRACT_PRODUCT_INFO_SCRIPT = resources.read_text(
 
 class Browser:
     def __init__(self, config: BrowserConfig):
+        logger = Logger.get_logger(name="browser", level="DEBUG")
+
         logger.info(f"Initializing browser.")
         self.config = config
         self.logger = logger
@@ -45,6 +46,8 @@ class Browser:
         self.browser: PlaywrightBrowser = None
         self.page: Page = None
         self._cdp_session = None
+        self.context = None
+        self.screenshot_scale_factor = None
 
     async def __aenter__(self):
         """Initialize the browser and return the instance."""
@@ -77,6 +80,7 @@ class Browser:
             ignore_https_errors=self.config.ignoreHTTPSErrors,
         )
 
+        self.context = self.browser.contexts[0]
         self._cdp_session = await self.browser.new_browser_cdp_session()
         await self.page.set_extra_http_headers(
             {
@@ -178,11 +182,11 @@ class Browser:
         if (
             self._cdp_session is None
             or not hasattr(self._cdp_session, "_page")
-            or self._cdp_session._page != self.current_page
+            or self._cdp_session._page != self.page
         ):
-            self._cdp_session = await self.context.new_cdp_session(self.current_page)
+            self._cdp_session = await self.context.new_cdp_session(self.page)
             # Store reference to the page this session belongs to
-            self._cdp_session._page = self.current_page
+            self._cdp_session._page = self.page
         return self._cdp_session
 
     async def get_screenshot(self):
@@ -203,9 +207,9 @@ class Browser:
 
             test_img_data = base64.b64decode(screenshot_b64)
             test_img = Image.open(io.BytesIO(test_img_data))
-            logger.info(f"Test image size: {test_img.size}")
+            self.logger.info(f"Test image size: {test_img.size}")
             self.screenshot_scale_factor = 1024 / test_img.size[0]
-            logger.info(f"Screenshot scale factor: {self.screenshot_scale_factor}")
+            self.logger.info(f"Screenshot scale factor: {self.screenshot_scale_factor}")
 
         screenshot_b64 = scale_b64_image(screenshot_b64, self.screenshot_scale_factor)
         return screenshot_b64

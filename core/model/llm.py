@@ -10,7 +10,7 @@ text_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0, max_tokens=2000)
 openai_client = OpenAI()
 
 
-def initialize_gemini(**model_config):
+def initialize_gemini(content=None, config=None):
     """initialize gemini llm and returns model instance"""
 
     settings = get_settings()
@@ -18,10 +18,12 @@ def initialize_gemini(**model_config):
     client = genai.Client(
         vertexai=True,
         project=settings.google_project_id,
-        location=settings.google_application_credentials,
+        location=settings.google_server_location,
     )
 
-    return client.models.generate_content(model=generation_model, **model_config)
+    return client.models.generate_content(
+        model=generation_model, contents=content, config=config
+    )
 
 
 def initialize_imagen(**model_config):

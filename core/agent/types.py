@@ -20,6 +20,25 @@ class ProductTemplateEnum(str, Enum):
     BOLD = "bold"
 
 
+class Stock(BaseModel):
+    items: int
+    out_of_stock: bool
+    not_found: bool
+
+
+class ProductAgentResponseType(BaseModel):
+    product_name: str
+    sale_price: int
+    regular_price: int
+    offer: str
+    currency: str
+    category: ProductIndustryEnum
+    description: str
+    product_features: str
+    template_type: ProductTemplateEnum
+    stock: Stock
+
+
 class ProductMetadata(BaseModel):
     product_name: str
     product_description: str

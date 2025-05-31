@@ -277,7 +277,7 @@
       availability: availability,
       variants: variants.length > 0 ? variants : null,
       images: images.map((img) => img.url),
-      url: url ? new URL(url, window.location.origin).href : null,
+      url: url ? url : null,
     };
   });
 }
