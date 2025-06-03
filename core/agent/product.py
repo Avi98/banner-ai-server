@@ -1,26 +1,14 @@
-from langchain_openai import ChatOpenAI
-from core.agent.types import ProductInfoOutput, ProductMetadata
-from core.agent.prompt import product_metadata_template
+def get_missing_product_info():
+    """Using llm to get missing info for product page"""
 
 
-def generate_prompt_name(model: ChatOpenAI, prompt: str):
-    """Generate marketing prompt that needs to be feed to generating banner image"""
-    return model.invoke(prompt)
+def generate_product_banner():
+    """based on the product info generate product banner"""
 
 
-def generate_product_info(
-    model: ChatOpenAI, product_info: ProductMetadata
-) -> ProductInfoOutput:
-    """Generate product information based on the provided metadata."""
+def generate_product_vedio_script():
+    """based on the product info generate product vedio script"""
 
-    prompt = product_metadata_template.format(
-        product_description=product_info.get("product_description"),
-        product_price=product_info.get("product_price"),
-        product_imgs=product_info.get("product_imgs"),
-    )
-    structured_chain = model.with_structured_output(
-        ProductInfoOutput, method="json_schema"
-    )
-    response = structured_chain.invoke(prompt)
 
-    return response
+def generate_product_vedio():
+    """based on the product info generate product vedio"""

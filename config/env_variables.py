@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     hf_token_inference: str = ""
     qwen_model_endpoint: str = ""
     stable_diffusion_endpoint: str
+    google_application_credentials: str
+    google_project_id: str
+    google_server_location: str
 
 
 def get_settings() -> Settings:

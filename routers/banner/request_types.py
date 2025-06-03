@@ -1,10 +1,8 @@
 from pydantic import BaseModel
-from typing import Tuple
+from typing import Tuple, Optional, List
 
-
-class GenerateBannerRequest(BaseModel):
-
-    productURL: str
+from core.agent.types import ProductBase
+from utils.consts import EIGHT_MB, EIGHT_SECONDS_MS
 
 
 class CrawlProductPageRequest(BaseModel):
@@ -22,7 +20,24 @@ class GetBannerPromptRequest(BaseModel):
 
 
 class GetImgPromptRequest(BaseModel):
-    product_images: list[str]
+    product_image: list[str]
+    product_name: Optional[str] = ""
+    product_title: Optional[str] = ""
+    product_description: Optional[str] = ""
     banner_style: str
     banner_size: Tuple[int, int] = (500, 500)  # (width, height)
     product_metadata: dict
+
+
+class CreateOGBannerRequest(BaseModel):
+    size: Tuple[int, int]
+    aspect_ratio: str
+    max_file_size: int
+    platforms: List[str]
+    product_info: ProductBase
+
+
+class CreateVedioScriptRequest(BaseModel):
+    product_info: GetImgPromptRequest
+    aspect_ratio: str
+    duration: str = EIGHT_SECONDS_MS

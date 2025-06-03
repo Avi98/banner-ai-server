@@ -3,6 +3,12 @@ from typing import Dict
 from pydantic import BaseModel, Field
 
 
+class Platform(str, Enum):
+    FACEBOOK = "facebook"
+    INSTAGRAM = "INSTAGRAM"
+    WHATSAPP = "WHATSAPP"
+
+
 class ProductIndustryEnum(str, Enum):
     FASHION = "fashion"
     ELECTRONICS = "electronics"
@@ -18,6 +24,46 @@ class ProductTemplateEnum(str, Enum):
     MINIMALIST = "minimalist"
     ELEGANT = "elegant"
     BOLD = "bold"
+
+
+class Stock(BaseModel):
+    items: int
+    out_of_stock: bool
+    not_found: bool
+
+
+class ProductBase(BaseModel):
+    sale_price: int
+    regular_price: int
+    offer: str
+    currency: str
+    category: ProductIndustryEnum
+    description: str
+    product_features: str
+    template_type: ProductTemplateEnum
+    stock: Stock
+    platforms: list[Platform]
+    product_images: list[str]
+    product_id: str
+    name: str
+    brand: str = ""
+    sku: str
+    gtin: str = ""
+    mpn: str = ""
+    product_metadata: Dict = Field(default_factory=dict)
+
+
+class ProductAgentResponseType(ProductBase):
+    product_name: str
+    sale_price: int
+    regular_price: int
+    offer: str
+    currency: str
+    category: ProductIndustryEnum
+    description: str
+    product_features: str
+    template_type: ProductTemplateEnum
+    stock: Stock
 
 
 class ProductMetadata(BaseModel):
@@ -42,6 +88,10 @@ class ProductInfo(BaseModel):
 class ProductInfoOutput(BaseModel):
     """Product information from the llm about the product."""
 
+    is_product_page: str = Field(
+        bool,
+        description="True is banner image can be generated for the provided product information",
+    )
     product_industry: str = Field(
         str,
         description="Industry of the product (eg. fashion, electronics, home decor, stationary, beauty_and_cosmetics, food_and_beverage)",
