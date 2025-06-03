@@ -1,11 +1,14 @@
+from io import BytesIO
+from PIL import Image
 from typing import Dict, Any, Tuple, Union
 from core.agent.product_agent import ProductAgent
-from core.prompt.banner_image_prompt import electronics_prompts
+
+from core.model.llm import initialize_gemini_img
 from core.utils.logger import Logger
 from exceptions.invalid_product_info_error import InvalidProductInfoError
-from routers.banner.request_types import Platform
 from routers.banner.response_types import CrawlBannerResponse
 from services.upload_product import ProductImage
+from services.prompt_factory import IndustryPromptFactory
 from utils.consts import EIGHT_MB
 
 
@@ -18,7 +21,6 @@ type ProductInfoType = dict[str, Any]
 class BannerService:
 
     def __init__(self, productImg: ProductImage):
-        self.product_img_client: ProductImage = productImg
         self.logger = Logger.get_logger(
             name=__class__,
         )
@@ -81,49 +83,48 @@ class BannerService:
                 "Invalid product information provided. Expected a dictionary."
             )
 
-        if not all(
-            key in product_info
-            for key in ["product_name", "product_description", "product_images"]
-        ):
-            self.logger.error("Product information is incomplete.")
-            raise InvalidProductInfoError(
-                "Product information is incomplete. Required fields are missing."
-            )
+        # if not all(
+        #     key in product_info
+        #     for key in ["product_name", "product_description", "product_images"]
+        # ):
+        #     self.logger.error("Product information is incomplete.")
+        #     raise InvalidProductInfoError(
+        #         "Product information is incomplete. Required fields are missing."
+        #     )
         return True
 
     async def create_og_banner(
         self,
         size: Tuple[int, int] = (1200, 630),
         max_size: str = EIGHT_MB,
-        platform: list[Platform] = [
-            Platform.FACEBOOK,
-            Platform.INSTAGRAM,
-            Platform.WHATSAPP,
-        ],
+        # platform: list[Platform] = [
+        #     Platform.FACEBOOK,
+        #     Platform.INSTAGRAM,
+        #     Platform.WHATSAPP,
+        # ],
         **product_info,
     ):
         """Generate an banner with the given product information and size for requested platforms."""
 
         self.logger.info("Creating OG banner with product information.")
 
-        # if not self._check_valid_og_banner_info(product_info):
-        #     return None
+        if not self._check_valid_og_banner_info(product_info):
+            return None
 
-        saved_img = self.product_img_client.save_img_files(
-            product_info.get("product_image"), TEMP_IMAGE_DIR
+        ind_prompt_factory = IndustryPromptFactory(product_info)
+
+        prompt_template = ind_prompt_factory.get_prompt(
+            IndustryPromptFactory.validate_product_info(product_info)
         )
 
-        prompt_args = {
-            "tagline": product_info.get("product_name"),
-            "main_title_emphasis": product_info.get("product_name"),
-            "sales_dates": product_info.get("product_sales", "none"),
-            "discount_text": "None",
-            "platform": platform,
-        }
-        prompt_template = electronics_prompts(**prompt_args)
+        response = initialize_gemini_img(content=prompt_template)
+        return self._get_img_from(response)
 
-        self.product_img_client.get_image_file(
-            img_paths=[img_path.get("file_path") for img_path in saved_img],
-            prompt=prompt_template.to_string(),
-            out_dir=TEMP_BANNER_DIR,
-        )
+    def _get_img_from(self, response):
+        for part in response.candidates[0].content.parts:
+            if part.text is not None:
+                print(part.text)
+            elif part.inline_data is not None:
+                image = Image.open(BytesIO((part.inline_data.data)))
+                image.save("gemini-native-image.png")
+                image.show()

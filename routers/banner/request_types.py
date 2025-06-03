@@ -1,14 +1,8 @@
-from enum import Enum
 from pydantic import BaseModel
-from typing import Any, Tuple, Optional
+from typing import Tuple, Optional, List
 
+from core.agent.types import ProductBase
 from utils.consts import EIGHT_MB, EIGHT_SECONDS_MS
-
-
-class Platform(str, Enum):
-    FACEBOOK = "facebook"
-    INSTAGRAM = "INSTAGRAM"
-    WHATSAPP = "WHATSAPP"
 
 
 class CrawlProductPageRequest(BaseModel):
@@ -36,11 +30,11 @@ class GetImgPromptRequest(BaseModel):
 
 
 class CreateOGBannerRequest(BaseModel):
-    size: Tuple[int, int] = (1200, 630)
-    aspect_ratio: str = "1.91.1"
-    max_file_size: str = EIGHT_MB
-    platforms: list[Platform]
-    product_info: GetImgPromptRequest
+    size: Tuple[int, int]
+    aspect_ratio: str
+    max_file_size: int
+    platforms: List[str]
+    product_info: ProductBase
 
 
 class CreateVedioScriptRequest(BaseModel):

@@ -11,7 +11,7 @@ class ProductImage:
     logger: Logger
 
     def __init__(self):
-        self.logger = Logger(__name__)
+        self.logger = Logger.get_logger(__name__, level="INFO")
         self.client = initialize_gemini
 
     def uploadImg(self, imgPaths: list[str]):

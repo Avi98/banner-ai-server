@@ -1,24 +1,6 @@
 from langchain_core.prompts import PromptTemplate
-from routers.banner.request_types import Platform
 
-# product industry: electronics prompts
-electronics_prompt_basic = """
-	Create a futuristic tech product banner image optimized for {platform}.
-	Use a dark neon-purple background with glowing triangle designs.
-
-	Place the uploaded product image (image 1) prominently on the right.
-	Headline (bold, neon): "{headline_text}"
-	Subheadline: "{subheadline_text}"
-
-	Features:
-	- {feature_1}
-	- {feature_2}
-	- {feature_3}
-
-	Add pricing: "{price_text}"
-	Offer text: "{offer_text}"
-	Include website: {website_url}
-"""
+from core.agent.types import Platform
 
 
 def electronics_prompts(
@@ -29,9 +11,9 @@ def electronics_prompts(
     discount_text: str,
 ):
     electronics_prompt_without_logo = """
-	Design a modern and clean eCommerce sale banner for a promotional electronics event.
+	Design and create a modern and clean eCommerce sale banner image for a promotional electronics event.
 
-	**Platform:** {platform}
+	**Platforms:** {platform}
 	**Image Size:** 1200x628 pixels (under 8MB)
 
 	### Style & Background:
@@ -69,4 +51,4 @@ def electronics_prompts(
         "discount_text": discount_text,
         "main_title_rest": "",
     }
-    return prompt_template.invoke(variables)
+    return prompt_template.invoke(variables).to_string()
