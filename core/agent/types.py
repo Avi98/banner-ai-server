@@ -1,56 +1,11 @@
-from enum import Enum
-from typing import Dict
 from pydantic import BaseModel, Field
 
-
-class Platform(str, Enum):
-    FACEBOOK = "facebook"
-    INSTAGRAM = "INSTAGRAM"
-    WHATSAPP = "WHATSAPP"
-
-
-class ProductIndustryEnum(str, Enum):
-    FASHION = "fashion"
-    ELECTRONICS = "electronics"
-    HOME_DECOR = "home_decor"
-    STATIONARY = "stationary"
-    BEAUTY_AND_COSMETICS = "beauty_and_cosmetics"
-    FOOD_AND_BEVERAGE = "food_and_beverage"
-
-
-class ProductTemplateEnum(str, Enum):
-    MODERN = "modern"
-    CLASSIC = "classic"
-    MINIMALIST = "minimalist"
-    ELEGANT = "elegant"
-    BOLD = "bold"
-
-
-class Stock(BaseModel):
-    items: int
-    out_of_stock: bool
-    not_found: bool
-
-
-class ProductBase(BaseModel):
-    sale_price: int
-    regular_price: int
-    offer: str
-    currency: str
-    category: ProductIndustryEnum
-    description: str
-    product_features: str
-    template_type: ProductTemplateEnum
-    stock: Stock
-    platforms: list[Platform]
-    product_images: list[str]
-    product_id: str
-    name: str
-    brand: str = ""
-    sku: str
-    gtin: str = ""
-    mpn: str = ""
-    product_metadata: Dict = Field(default_factory=dict)
+from global_type.product_base import (
+    ProductBase,
+    ProductIndustryEnum,
+    Stock,
+    ProductTemplateEnum,
+)
 
 
 class ProductAgentResponseType(ProductBase):

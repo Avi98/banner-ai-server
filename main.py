@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from routers.banner import banner
+from routers.vedio import routes
 
 app = FastAPI()
 
@@ -19,4 +20,7 @@ async def startup_event():
     # startup tasks
 
 
-app.include_router(banner.router, prefix="/banner")
+app.include_router(
+    banner.router,
+)
+app.include_router(routes.router)
