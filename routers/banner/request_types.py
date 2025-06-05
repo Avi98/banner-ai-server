@@ -19,16 +19,6 @@ class GetBannerPromptRequest(BaseModel):
     product_metadata: dict
 
 
-class GetImgPromptRequest(BaseModel):
-    product_image: list[str]
-    product_name: Optional[str] = ""
-    product_title: Optional[str] = ""
-    product_description: Optional[str] = ""
-    banner_style: str
-    banner_size: Tuple[int, int] = (500, 500)  # (width, height)
-    product_metadata: dict
-
-
 class CreateOGBannerRequest(BaseModel):
     size: Tuple[int, int]
     aspect_ratio: str
@@ -38,6 +28,6 @@ class CreateOGBannerRequest(BaseModel):
 
 
 class CreateVedioScriptRequest(BaseModel):
-    product_info: GetImgPromptRequest
+    product_info: ProductBase
     aspect_ratio: str
     duration: str = EIGHT_SECONDS_MS

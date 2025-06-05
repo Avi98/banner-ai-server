@@ -1,18 +1,15 @@
-from typing import Any
 from fastapi import APIRouter, Body, HTTPException
 from core.agent.product_agent import ProductAgent
 from core.model.llm import initialize_gemini
 from core.utils.logger import Logger
-from routers.banner.response_types import CrawlBannerResponse
 from services.banner_service import BannerService
 from services.upload_product import ProductImage
 from .request_types import (
     CrawlProductPageRequest,
     CreateOGBannerRequest,
-    CreateVedioScriptRequest,
 )
 
-router = APIRouter()
+router = APIRouter(prefix="/banner", tags=["Banners"])
 
 
 @router.get("/test-llm")
@@ -61,10 +58,3 @@ async def create_product_og_banner(
     except Exception as e:
         logger.error(f"error occured in create_product_og_banner:{e}")
         raise HTTPException(status_code=500, details=str(e))
-
-
-@router.post("generate_vedio_script")
-async def create_vedio_script(vedio_script_req: CreateVedioScriptRequest):
-    """Create a vedio script for the product"""
-
-    pass
