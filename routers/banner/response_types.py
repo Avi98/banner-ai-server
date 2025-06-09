@@ -1,28 +1,11 @@
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Union, Any
 
+from global_type.product_base import ProductBase
 
-class ProductDetails(BaseModel):
+
+class ProductDetails(ProductBase):
     """Product information details model"""
-
-    product_id: Union[int, str]
-    title: str
-    description: str
-    name: str
-    brand: str
-    price: Union[int, float, str]  # Price can be numeric or string
-    regular_price: Union[int, float, str]  # Regular price can be numeric or string
-    offer: str
-    currency: str
-    sku: str
-    gtin: str
-    mpn: str
-    product_url: str
-    category: str
-    availability: str
-    variants: str
-    images: List[str]
-    product_features: str
 
 
 class MetadataOgTags(BaseModel):
@@ -87,13 +70,3 @@ class CrawlBannerResponse(BaseModel):
     headers: Optional[Dict[str, str]]
     metadata: Optional[Metadata]
     product_info: ProductDetails
-
-
-class ProductInfoResponse(BaseModel):
-    product_imgs: list[str]
-    product_name: str
-    product_description: str
-    product_price: str
-    product_category: str
-    product_brand: str
-    product_metadata: dict

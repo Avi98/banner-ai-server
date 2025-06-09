@@ -1,3 +1,4 @@
+import time
 from google import genai
 from google.genai import types
 
@@ -33,7 +34,7 @@ def initialize_gemini_img(content=None, config=None):
 
     if config is None:
         merge_config = {"response_modalities": ["TEXT", "IMAGE"]}
-    elif config.__class__ is "dict":
+    elif config.__class__ == "dict":
         merge_config = config | {"response_modalities": ["TEXT", "IMAGE"]}
 
     # merge_conf = config | {"response_modalities": ["TEXT", "IMAGE"]}
@@ -57,3 +58,41 @@ def initialize_imagen(**model_config):
     return client.models.generate_content(
         model="imagen-3.0-generate-002", **model_config
     )
+
+
+def init_veo(contents=None, config=None):
+    """Initialize veo client for generating vedio"""
+
+    settings = get_settings()
+    model = "veo-2.0-generate-001"
+    client = genai.Client(
+        vertexai=True,
+        project=settings.google_project_id,
+        location=settings.google_server_location,
+    )
+
+    merge_config = None
+
+    if config is None:
+        merge_config = {
+            "aspect_ratio": "16:9",  # "16:9" or "9:16"
+        }
+    elif config.__class__ == "dict":
+        merge_config = config | {
+            "aspect_ratio": "16:9",  # "16:9" or "9:16"
+        }
+
+    operation = client.models.generate_videos(
+        model=model,
+        prompt=contents,
+        config=types.GenerateVideosConfig(**merge_config),
+    )
+
+    while not operation.done:
+        time.sleep(20)
+        operation = client.operations.get(operation)
+
+    for n, generated_video in enumerate(operation.response.generated_videos):
+        generated_video.video.save(f"video{n}.mp4")  # save the video
+
+    return "saved"

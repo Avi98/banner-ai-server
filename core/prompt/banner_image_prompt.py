@@ -1,6 +1,6 @@
 from langchain_core.prompts import PromptTemplate
 
-from core.agent.types import Platform
+from global_type.product_base import Platform
 
 
 def electronics_prompts(
