@@ -20,10 +20,6 @@ class GetBannerPromptRequest(BaseModel):
 
 
 class CreateOGBannerRequest(BaseModel):
-    size: Tuple[int, int]
-    aspect_ratio: str
-    max_file_size: int
-    platforms: List[str]
     product_info: ProductBase
 
 

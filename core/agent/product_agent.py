@@ -1,5 +1,5 @@
 from encodings.base64_codec import base64_decode
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 from PIL import Image
 
 from core.agent.types import ProductAgentResponseType
@@ -7,6 +7,7 @@ from core.browser.browser import Browser, BrowserConfig
 from core.prompt.product_info_prompt import get_product_prompt
 from core.utils.logger import Logger
 from core.model.llm import initialize_gemini as gemini_client
+from global_type.product_base import ProductBase
 
 
 class ProductAgent:
@@ -35,14 +36,37 @@ class ProductAgent:
                 content=[product_image, prompt],
                 config={
                     "response_mime_type": "application/json",
-                    "response_schema": ProductAgentResponseType,
-                    # "responseModalities": ["TEXT", "IMAGE"],
+                    # "response_schema": ProductBase,
+                    "responseModalities": ["TEXT"],
                 },
             )
 
+            return self._get_product_info(
+                product_info,
+                model_json=response.text,
+                headers=headers,
+                metadata=metadata,
+            )
+
+    def _get_product_info(
+        self, product_info: Dict[str, Any], model_json: str, **product_metadata
+    ):
+        model_response: Dict[str, str]
+
+        try:
             import json
 
-            return product_info | json.loads(response.text), headers, metadata
+            model_response = json.loads(model_json)
+
+            # ProductBase.model_validate(model_response)
+        except Exception as E:
+            raise Exception("Invalid llm model response for product base")
+
+        return (
+            product_info | model_response,
+            product_metadata.get("headers"),
+            product_metadata.get("metadata"),
+        )
 
     async def _extract_page_content(self, browser: Browser, url: str) -> bool:
         """Navigate to URL and verify content loading."""

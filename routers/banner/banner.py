@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from config.get_db_session import get_db
 from core.agent.product_agent import ProductAgent
-from core.model.llm import initialize_gemini
 from core.utils.logger import Logger
+from routers.banner.response_types import CrawlBannerResponse
 from services.banner_service import BannerService
 from services.upload_product import ProductImage
 from .request_types import (
@@ -12,22 +16,22 @@ from .request_types import (
 router = APIRouter(prefix="/banner", tags=["Banners"])
 
 
-@router.get("/test-llm")
-def test():
-    # llm = initialize_imagen()
-    llm = initialize_gemini()
-    # model: Any = llm.invoke("can A dog reading a newspaper")
-    return llm
-
-
-# step 1
 @router.post("/crawl_product_page")
 async def crawl_product_page(
-    banner: CrawlProductPageRequest = Body(...),
+    banner: CrawlProductPageRequest = Body(...), db: AsyncSession = Depends(get_db)
 ):
+    logger = Logger.get_logger(
+        __name__,
+    )
+    try:
+        agent = ProductAgent()
+        bannerService = BannerService(db)
 
-    agent = ProductAgent()
-    return await BannerService.get_product_info(banner.productURL, agent)
+        return await bannerService.get_product_info(banner.productURL, agent)
+    except SQLAlchemyError as sqlErr:
+        logger.error(f"failed to save to db: {sqlErr}")
+    except Exception as e:
+        raise HTTPException(status_code=500, details=str(e))
 
 
 @router.post("/create_product_og_banner")
@@ -47,10 +51,6 @@ async def create_product_og_banner(
         banner_info_dump = og_banner_info.model_dump()
 
         return await banner.create_og_banner(
-            size=og_banner_info.size,
-            platform=og_banner_info.platforms,
-            max_size=og_banner_info.max_file_size,
-            aspect_ratio=og_banner_info.aspect_ratio,
             **banner_info_dump.get("product_info"),
         )
     except ValueError as ve:

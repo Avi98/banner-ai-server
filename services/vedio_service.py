@@ -1,6 +1,8 @@
 from typing import Optional
 
-from core.model.llm import init_veo, initialize_imagen
+
+from core.model.llm import init_veo, initialize_gemini, initialize_imagen
+from core.prompt.ad_script_prompt import get_ad_script_banner
 from core.utils.logger import Logger
 from routers.banner.request_types import CreateVedioScriptRequest
 from services.s3_storage_service import S3StorageService
@@ -20,6 +22,7 @@ class VedioService:
         self.logger = Logger.get_logger(__name__)
         # self.storage_service = storage_service
         self.logger.info("VedioService initialized successfully")
+        self._script = None
 
     # async def upload_vedio(self, file_path: str, product_id: str) -> str:
     #     """Upload video using the storage service"""
@@ -73,56 +76,8 @@ class VedioService:
             return False
 
     async def generate_add_script(self, product_info: Optional[ProductBase]) -> str:
-        # initialize_imagen({"contents": ["create a "]})
-        prompt = (
-            video_ad_prompt
-        ) = """
-                Create a short, vertical 3D animated ad video for {platform}. The scene opens with a high-energy transition into a futuristic, minimal electronics showroom glowing with cool blue and silver tones. A set of cutting-edge electronics — a frameless smart TV, wireless earbuds, smartwatch, DSLR camera, and sleek smartphone — appear one by one with quick, smooth animations.
-
-                Each product spins slowly or lights up as it enters frame, paired with kinetic text pop-ins that highlight features like:
-
-                “{feature_1}”
-                “{feature_2}”
-                “{feature_3}”
-                “{feature_4}”
-                “{feature_5}”
-
-                Use modern techno background music synced to motion beats. The camera transitions quickly between dynamic angles:
-
-                - eye-level pans,
-                - close-up shots showing texture and lighting,
-                - wide floating angles to give depth and sophistication.
-
-                Color palette: {color_palette}
-                Style: {style}
-                Lighting: {lighting}
-                Ambiance: {ambiance}
-
-                At the end, display a bold call-to-action overlay:
-                “{cta_text}”
-                with a pulsing button animation and product icons sliding in.
-
-                Aspect Ratio: {aspect_ratio}
-                Duration: {duration}
-                Target Platform: {target_platform}
-                """
-
-        return prompt.format(
-            platform="Facebook and Instagram Stories/Reels",
-            feature_1="Crystal-Clear 8K Display",
-            feature_2="Noise Cancellation Pro",
-            feature_3="Smart Sync Watch",
-            feature_4="AI Night Camera",
-            feature_5="Ultra-Thin Design",
-            color_palette="Cool metallic blues, white highlights, neon accents",
-            style="Sleek, futuristic, premium tech product showcase",
-            lighting="Glowing ambient light with subtle shadows and reflections",
-            ambiance="Fast-paced, energetic, and premium-feel",
-            cta_text="Shop Now | Limited-Time Deals on Smart Tech",
-            aspect_ratio="9:16 (mobile-friendly vertical format)",
-            duration="~15 seconds",
-            target_platform="Facebook Reels, Instagram Stories, Instagram Reels",
-        )
+        prompt = get_ad_script_banner()
+        # initialize_gemini(content=, )
 
     async def create_vedio(self, prompt: str):
 
