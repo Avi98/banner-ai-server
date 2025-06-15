@@ -114,7 +114,8 @@ class Browser:
                 )
                 response = await self.page.goto(
                     url,
-                    wait_until="networkidle",
+                    # wait_untille",
+                    wait_until="load",
                     timeout=self.config.timeout,
                 )
                 if response.ok:

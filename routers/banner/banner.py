@@ -36,7 +36,7 @@ async def crawl_product_page(
 
 @router.post("/create_product_og_banner")
 async def create_product_og_banner(
-    og_banner_info: CreateOGBannerRequest,
+    og_banner_info: CreateOGBannerRequest, db: AsyncSession = Depends(get_db)
 ):
     """Generate banner response about the product."""
     logger = Logger.get_logger(
@@ -44,9 +44,7 @@ async def create_product_og_banner(
     )
     try:
 
-        product_client = ProductImage()
-
-        banner = BannerService(productImg=product_client)
+        banner = BannerService(db)
 
         banner_info_dump = og_banner_info.model_dump()
 

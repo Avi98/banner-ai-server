@@ -83,7 +83,10 @@ class IndustryPromptFactory:
 
     def get_prompt(self, ind_type: ProductBase) -> str:
         """Get prompt for the given industry type using appropriate prompt generator"""
-        generator_class = self._generators.get(ind_type.model_dump().get("category"))
+        # generator_class = self._generators.get(ind_type.model_dump().get("category"))
+        category_enum = ProductIndustryEnum[ind_type.get("category")]
+        generator_class = self._generators.get(category_enum)
+
         if not generator_class:
             raise ValueError(f"No prompt generator found for industry type: {ind_type}")
 
