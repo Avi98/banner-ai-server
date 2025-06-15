@@ -9,6 +9,7 @@ from core.model.llm import initialize_gemini_img
 from core.utils.logger import Logger
 from exceptions.invalid_product_info_error import InvalidProductInfoError
 from models.banner_var_model import BannerVariant, Product
+from services.banner_variant_service import BannerVariantService
 from services.prompt_factory import IndustryPromptFactory
 from services.s3_service import S3Service
 from utils.type_cast import str_to_float
@@ -22,12 +23,15 @@ type ProductInfoType = dict[str, Any]
 
 class BannerService:
 
-    def __init__(self, db: AsyncSession, s3=S3Service()):
+    def __init__(
+        self, db: AsyncSession, s3=S3Service(), variation_service=BannerVariantService()
+    ):
         self.logger = Logger.get_logger(
             name=__class__,
         )
         self.db = db
         self.s3Client = s3
+        self.variation = variation_service
 
     async def get_product_info(self, product_url: str, agent: ProductAgent):
         product_info, headers, metadata = await agent.crawl_product_page(product_url)
@@ -136,6 +140,10 @@ class BannerService:
         await self._save_banner_link(
             s3_url, product_id=product_info.get("product_id"), variant_num=1
         )
+
+    def _generate_variations(self, banner, img):
+        """creates n number of variations for banner and returns bytes"""
+        pass
 
     async def _save_product(self, product_info: Dict[str, Any]) -> Product:
         """
