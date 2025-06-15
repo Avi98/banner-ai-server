@@ -8,7 +8,7 @@ from core.agent.product_agent import ProductAgent
 from core.model.llm import initialize_gemini_img
 from core.utils.logger import Logger
 from exceptions.invalid_product_info_error import InvalidProductInfoError
-from models.banner_var_model import Product
+from models.banner_var_model import BannerVariant, Product
 from services.prompt_factory import IndustryPromptFactory
 from services.s3_service import S3Service
 from utils.type_cast import str_to_float
@@ -133,7 +133,9 @@ class BannerService:
         img_bytes = self._get_img_from(response, in_mem=True)
         s3_url = await self.s3Client.upload_image(image_data=img_bytes, s3_key=s3_key)
 
-        return s3_url
+        await self._save_banner_link(
+            s3_url, product_id=product_info.get("product_id"), variant_num=1
+        )
 
     async def _save_product(self, product_info: Dict[str, Any]) -> Product:
         """
@@ -204,3 +206,41 @@ class BannerService:
                 elif not in_mem:
                     image.save("gemini-native-image.png")
                     image.show()
+
+    async def _save_banner_link(
+        self, s3_url: str, product_id: int, variant_num: int
+    ) -> BannerVariant:
+        """Save banner variant s3 url to db"""
+
+        try:
+            s3_key = s3_url.split(".amazonaws.com/")[-1] if s3_url else None
+
+            banner_variant = BannerVariant(
+                product_id=int(product_id),
+                variant_number=variant_num,
+                s3_url=s3_url,
+                s3_key=s3_key,
+                status="completed",  # Set initial status as completed since we have the URL
+                generation_time=0.0,  # You can update this if you track generation time
+                view_count=0,
+                is_selected=False,
+                is_downloaded=False,
+            )
+
+            self.db.add(banner_variant)
+            await self.db.commit()
+            await self.db.refresh(banner_variant)
+
+            self.logger.info(
+                f"Successfully saved banner variant with ID: {banner_variant.id}"
+            )
+            return banner_variant
+
+        except SQLAlchemyError as e:
+            await self.db.rollback()
+            self.logger.error(f"Database error while saving banner variant: {str(e)}")
+            raise
+        except Exception as e:
+            await self.db.rollback()
+            self.logger.error(f"Unexpected error while saving banner variant: {str(e)}")
+            raise
