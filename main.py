@@ -1,5 +1,6 @@
 """main app"""
 
+import sys
 from fastapi import FastAPI
 from config.get_db_session import init_db
 from routers.banner import banner

@@ -10,6 +10,7 @@ from core.utils.logger import Logger
 from exceptions.invalid_product_info_error import InvalidProductInfoError
 from models.banner_var_model import Product
 from services.prompt_factory import IndustryPromptFactory
+from services.s3_service import S3Service
 from utils.type_cast import str_to_float
 
 
@@ -21,11 +22,12 @@ type ProductInfoType = dict[str, Any]
 
 class BannerService:
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, s3=S3Service()):
         self.logger = Logger.get_logger(
             name=__class__,
         )
         self.db = db
+        self.s3Client = s3
 
     async def get_product_info(self, product_url: str, agent: ProductAgent):
         product_info, headers, metadata = await agent.crawl_product_page(product_url)
@@ -118,11 +120,20 @@ class BannerService:
         ind_prompt_factory = IndustryPromptFactory(product_info)
 
         prompt_template = ind_prompt_factory.get_prompt(
-            IndustryPromptFactory.validate_product_info(product_info)
+            # IndustryPromptFactory.validate_pr product_info(product_info)
+            product_info
         )
 
         response = initialize_gemini_img(content=prompt_template)
-        return self._get_img_from(response)
+        s3_key = self.s3Client.generate_s3_key(
+            banner_name=product_info.get("name"),
+            platform=product_info.get("platform", "facebook"),
+        )
+
+        img_bytes = self._get_img_from(response, in_mem=True)
+        s3_url = await self.s3Client.upload_image(image_data=img_bytes, s3_key=s3_key)
+
+        return s3_url
 
     async def _save_product(self, product_info: Dict[str, Any]) -> Product:
         """
@@ -177,11 +188,19 @@ class BannerService:
             self.logger.error(f"Unexpected error while saving product: {str(e)}")
             raise
 
-    def _get_img_from(self, response):
+    def _get_img_from(self, response, in_mem=True):
         for part in response.candidates[0].content.parts:
             if part.text is not None:
                 print(part.text)
             elif part.inline_data is not None:
                 image = Image.open(BytesIO((part.inline_data.data)))
-                image.save("gemini-native-image.png")
-                image.show()
+                if in_mem:
+                    import io
+
+                    in_mem_file = io.BytesIO()
+                    image.save(in_mem_file, format="png")
+                    return in_mem_file.getvalue()
+
+                elif not in_mem:
+                    image.save("gemini-native-image.png")
+                    image.show()
