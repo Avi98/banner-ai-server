@@ -1,6 +1,8 @@
+import asyncio
+import random
 from io import BytesIO
 from PIL import Image
-from typing import Dict, Any, Tuple, Union
+from typing import Dict, Any, List, Tuple, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -9,6 +11,7 @@ from core.model.llm import initialize_gemini_img
 from core.utils.logger import Logger
 from exceptions.invalid_product_info_error import InvalidProductInfoError
 from models.banner_var_model import BannerVariant, Product
+from services.banner_variant_service import BannerVariantService
 from services.prompt_factory import IndustryPromptFactory
 from services.s3_service import S3Service
 from utils.type_cast import str_to_float
@@ -22,12 +25,15 @@ type ProductInfoType = dict[str, Any]
 
 class BannerService:
 
-    def __init__(self, db: AsyncSession, s3=S3Service()):
+    def __init__(
+        self, db: AsyncSession, s3=S3Service(), variation_service=BannerVariantService()
+    ):
         self.logger = Logger.get_logger(
             name=__class__,
         )
         self.db = db
         self.s3Client = s3
+        self.var_service = variation_service
 
     async def get_product_info(self, product_url: str, agent: ProductAgent):
         product_info, headers, metadata = await agent.crawl_product_page(product_url)
@@ -125,17 +131,62 @@ class BannerService:
         )
 
         response = initialize_gemini_img(content=prompt_template)
-        s3_key = self.s3Client.generate_s3_key(
-            banner_name=product_info.get("name"),
-            platform=product_info.get("platform", "facebook"),
-        )
 
         img_bytes = self._get_img_from(response, in_mem=True)
-        s3_url = await self.s3Client.upload_image(image_data=img_bytes, s3_key=s3_key)
-
-        await self._save_banner_link(
-            s3_url, product_id=product_info.get("product_id"), variant_num=1
+        banners_urls = await self._create_upload_variants(
+            img_bytes, 3, product_name=product_info.get("product_name", "")
         )
+
+        return banners_urls
+
+        # await self._save_banner_link(
+        #     s3_url, product_id=product_info.get("product_id"), variant_num=1
+        # )
+
+    async def _generate_variant(self, base_img: bytes, num_var: int) -> List[bytes]:
+        """
+        Creates multi variant for provided img
+        Args:
+            base_img: bytes for img
+            num_var: number of variant to be generated
+
+        Returns:
+            list of bytes
+        """
+
+        variant = self.var_service.generate_variants(base_img, num_variant=num_var)
+
+        return await asyncio.gather(*variant, return_exceptions=True)
+
+    async def _create_upload_variants(
+        self, base_img: bytes, n: int, product_name: str
+    ) -> List[str]:
+        """
+        Uploads bytes to S3
+        Args:
+            bytes: img bytes
+            n: number of variants
+        Returns:
+            list of urls
+        """
+
+        variants = await self._generate_variant(base_img=base_img, num_var=n)
+        s3_urls = [
+            self.s3Client.upload_byte(byte, name=f"{product_name}_{i}")
+            for i, byte in enumerate(variants)
+        ]
+
+        return await asyncio.gather(*s3_urls)
+
+    # def _generate_variations(self, banner: bytes, num_var: int):
+    #     """
+    #     Generate variations based on the img.
+    #     Upload the variations on S3 & get the link for the variation link
+    #     Save links in DB for their respective product_id
+    #     """
+
+    #     banner_bytes = self.var_service.generate_variants(banner, num_variant=num_var)
+    #     return banner_bytes
 
     async def _save_product(self, product_info: Dict[str, Any]) -> Product:
         """

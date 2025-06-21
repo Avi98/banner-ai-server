@@ -59,6 +59,21 @@ class S3Service:
         except ClientError as e:
             raise Exception(f"S3 upload failed: {str(e)}")
 
+    async def upload_byte(
+        self, byte: bytes, name: str, platform: str = "Facebook"
+    ) -> str:
+        """
+        upload single byte to S3
+        Args:
+            takes bytes as input
+        Returns:
+            returns URL of the S3 uploaded img
+
+        """
+        key = self.generate_s3_key(name, platform)
+
+        return await self.upload_image(byte, key)
+
     async def delete_image(self, s3_key: str) -> bool:
         """Delete image from S3"""
         try:

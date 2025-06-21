@@ -5,9 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config.get_db_session import get_db
 from core.agent.product_agent import ProductAgent
 from core.utils.logger import Logger
-from routers.banner.response_types import CrawlBannerResponse
 from services.banner_service import BannerService
-from services.upload_product import ProductImage
 from .request_types import (
     CrawlProductPageRequest,
     CreateOGBannerRequest,
