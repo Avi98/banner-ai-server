@@ -1,4 +1,4 @@
-import string
+from uuid import UUID, uuid4
 from sqlalchemy import (
     Column,
     Integer,
@@ -9,7 +9,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
@@ -45,14 +45,16 @@ class BannerVariant(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    product = relationship("Product", back_populates="variants")
+    product = relationship("Product", back_populates="bannerVariant")
 
 
 class Product(Base):
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)
-    uuid = Column(String(36), unique=True, index=True)
+    uuid: Mapped[UUID] = mapped_column(
+        String(36), unique=True, index=True, default=uuid4
+    )
     title = Column(String(200), nullable=False)
     description = Column(Text)
 
@@ -87,4 +89,4 @@ class Product(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
-    variants = relationship("BannerVariant", back_populates="product")
+    variants = relationship("BannerVariant", back_populates="bannerVariant")
