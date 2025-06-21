@@ -1,5 +1,7 @@
+import asyncio
 import io
 import random
+from types import CoroutineType
 from typing import List
 from PIL import Image, ImageEnhance, ImageFilter
 
@@ -32,23 +34,20 @@ class BannerVariantService:
         }
         self.layout_variations = {}
 
-    def generate_variants(self, base_img: bytes, num_variant: int = 3) -> List[bytes]:
+    def generate_variants(self, base_img: bytes, num_variant: int = 3) -> CoroutineType:
         base_pil = Image.open(io.BytesIO(base_img))
 
-        variants = []
-
-        variants.append(base_img)
-
-        for _ in range(num_variant - 1):
-            style = random.choice(self.style_variations)
+        async def generate_var():
+            style = random.choice(list(self.style_variations))
             seed = random.random()
 
             enhanced = self._enhance_img(base_pil, style, seed)
 
             buffer = io.BytesIO()
             enhanced.save(buffer, format="PNG")
-            variants.append(buffer.getvalue())
-        return variants
+            return buffer.getvalue()
+
+        return [asyncio.create_task(generate_var()) for _ in range(num_variant)]
 
     def _enhance_img(self, base_pil: Image.Image, style, seed):
         """enhance image while preserving original content"""
