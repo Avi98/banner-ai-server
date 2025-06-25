@@ -1,7 +1,6 @@
 import asyncio
 import base64
 import io
-from turtle import width
 from typing import List
 from dataclasses import dataclass, field
 from importlib import resources
