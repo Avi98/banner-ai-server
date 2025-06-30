@@ -1,15 +1,30 @@
-from typing import Union
+"""main app"""
 
+import sys
 from fastapi import FastAPI
+from config.get_db_session import init_db
+from routers.banner import banner
+from routers.vedio import routes
 
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+def receive_signal(signalNumber, frame):
+    print("Received:", signalNumber)
+    sys.exit()
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.on_event("startup")
+async def startup_event():
+    await init_db()
+
+    import signal
+
+    signal.signal(signal.SIGINT, receive_signal)
+    # startup tasks
+
+
+app.include_router(
+    banner.router,
+)
+app.include_router(routes.router)
