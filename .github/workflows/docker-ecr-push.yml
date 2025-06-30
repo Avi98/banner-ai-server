@@ -1,7 +1,7 @@
-name: Docker ECR Push
+name: Build and Push Docker Image to AWS ECR
 
 on:
-  pull_request:
+  push:
     branches:
       - master
 
