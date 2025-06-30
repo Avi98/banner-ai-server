@@ -1,7 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, List
-from typing import Dict, Union
-from openai import BaseModel
 from pydantic import Field
 from enum import Enum
 

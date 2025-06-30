@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     Float,
     ForeignKey,
+    UUID as UUID_TYPE,
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.declarative import declarative_base
@@ -45,7 +46,7 @@ class BannerVariant(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    product = relationship("Product", back_populates="bannerVariant")
+    product = relationship("Product", back_populates="variants")
 
 
 class Product(Base):
@@ -53,7 +54,7 @@ class Product(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     uuid: Mapped[UUID] = mapped_column(
-        String(36), unique=True, index=True, default=uuid4
+        UUID_TYPE, unique=True, index=True, default=uuid4
     )
     title = Column(String(200), nullable=False)
     description = Column(Text)
@@ -89,4 +90,4 @@ class Product(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
-    variants = relationship("BannerVariant", back_populates="bannerVariant")
+    variants = relationship("BannerVariant", back_populates="product")

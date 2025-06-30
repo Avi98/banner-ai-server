@@ -1,10 +1,12 @@
 import asyncio
 import random
 from io import BytesIO
+from types import CoroutineType
 from PIL import Image
 from typing import Dict, Any, List, Tuple, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from tenacity import retry
 
 from core.agent.product_agent import ProductAgent
 from core.model.llm import initialize_gemini_img
@@ -137,6 +139,15 @@ class BannerService:
             img_bytes, 3, product_name=product_info.get("product_name", "")
         )
 
+        # save to DB
+        for i, s3_url in enumerate(banners_urls):
+            await self._save_banner_link(
+                s3_url,
+                product_id=product_info.get("product_id"),
+                variant_num=i,
+                db_session=self.db,
+            )
+
         return banners_urls
 
         # await self._save_banner_link(
@@ -160,7 +171,7 @@ class BannerService:
 
     async def _create_upload_variants(
         self, base_img: bytes, n: int, product_name: str
-    ) -> List[str]:
+    ) -> List[CoroutineType]:
         """
         Uploads bytes to S3
         Args:
@@ -259,17 +270,20 @@ class BannerService:
                     image.show()
 
     async def _save_banner_link(
-        self, s3_url: str, product_id: int, variant_num: int
+        self, s3_url: str, product_id: int, variant_num: int, db_session
     ) -> BannerVariant:
         """Save banner variant s3 url to db"""
 
         try:
-            s3_key = s3_url.split(".amazonaws.com/")[-1] if s3_url else None
+            save_s3_url: str = s3_url
+            s3_key = save_s3_url.split(".amazonaws.com/")[-1] if save_s3_url else None
+            product_id = int(product_id)
+
+            product = await db_session.get(Product, product_id)
 
             banner_variant = BannerVariant(
-                product_id=int(product_id),
                 variant_number=variant_num,
-                s3_url=s3_url,
+                s3_url=save_s3_url,
                 s3_key=s3_key,
                 status="completed",  # Set initial status as completed since we have the URL
                 generation_time=0.0,  # You can update this if you track generation time
@@ -278,9 +292,10 @@ class BannerService:
                 is_downloaded=False,
             )
 
-            self.db.add(banner_variant)
-            await self.db.commit()
-            await self.db.refresh(banner_variant)
+            banner_variant.product = product
+            db_session.add(banner_variant)
+            await db_session.commit()
+            await db_session.refresh(banner_variant)
 
             self.logger.info(
                 f"Successfully saved banner variant with ID: {banner_variant.id}"
