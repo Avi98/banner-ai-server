@@ -25,7 +25,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}
+          images: ${{ steps.login-ecr.outputs.registry }}/banner-app-be
           tags: latest
 
       - name: Set up Docker Buildx
