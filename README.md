@@ -12,3 +12,4 @@ Implementing proper depth map generation and normalization
 Using ControlNet with the depth map for more accurate lighting control
 Adding a specialized prompt for professional product photography
 Setting appropriate parameters for strength (0.6) to maintain product details while enhancing lighting
+o
