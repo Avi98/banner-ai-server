@@ -2,6 +2,8 @@ def str_to_float(val: str) -> float:
     try:
         value: int
 
+        if not val:
+            return 0.0
         if val.__class__ == str:
             value = val.replace(",", "")
         elif val.__class__ == int:
