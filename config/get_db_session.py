@@ -19,7 +19,9 @@ async def init_db():
         await engine.dispose()
     except Exception as e:
         print(f"Database initialization failed: {e}")
-        print(f"Database URL: {settings.DATABASE_URL}")  # Remove password in production
+        print(
+            f"Database URL: {settings.get_database_url}"
+        )  # Remove password in production
         raise
 
 

@@ -9,7 +9,7 @@ def initialize_gemini(content=None, config=None):
     """initialize gemini llm and returns model instance"""
 
     settings = get_settings()
-    generation_model = "gemini-2.5-flash-preview-05-20"
+    generation_model = "gemini-2.0-flash-lite-001"
     client = genai.Client(
         vertexai=True,
         project=settings.google_project_id,
