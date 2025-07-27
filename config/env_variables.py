@@ -12,9 +12,7 @@ class Settings(BaseSettings):
 
     app_name: str = "banner_ai_server"
     GOOGLE_PROJECT_ID: str = Field(description="Google Cloud Project ID")
-    GOOGLE_SERVER_LOCATION: str = Field(
-        default="", description="Google Cloud Server Location"
-    )
+    GOOGLE_SERVER_LOCATION: str = Field(description="Google Cloud Server Location")
 
     # aws S3
     AWS_REGION: str = Field(default="", description="AWS Region")
