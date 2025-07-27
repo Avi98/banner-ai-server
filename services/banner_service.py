@@ -3,7 +3,7 @@ import random
 from io import BytesIO
 from types import CoroutineType
 from PIL import Image
-from typing import Dict, Any, List, Tuple, Union
+from typing import Dict, Any, List, Tuple, TypeVar, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from tenacity import retry
@@ -24,24 +24,30 @@ TEMP_BANNER_DIR = "./temp_product_images"
 
 type ProductInfoType = dict[str, Any]
 
+T = TypeVar("T", bound=S3Service)
+
 
 class BannerService:
 
+    s3_factory: T = None
+
     def __init__(
-        self, db: AsyncSession, s3=S3Service(), variation_service=BannerVariantService()
+        self, db: AsyncSession, s3_fact: T, variation_service: BannerVariantService
     ):
         self.logger = Logger.get_logger(
             name=__class__,
         )
         self.db = db
-        self.s3Client = s3
+        self.s3_factory = s3_fact
         self.var_service = variation_service
 
     async def get_product_info(self, product_url: str, agent: ProductAgent):
         product_info, headers, metadata = await agent.crawl_product_page(product_url)
-        await self._save_product(product_info)
+        product = await self._save_product(product_info)
         return BannerService._format_product_response(
-            product=product_info, headers=headers, metadata=metadata
+            product={**product_info | {"id": product.id}},
+            headers=headers,
+            metadata=metadata,
         )
 
     @staticmethod
@@ -182,8 +188,9 @@ class BannerService:
         """
 
         variants = await self._generate_variant(base_img=base_img, num_var=n)
+        s3 = self.s3_factory()
         s3_urls = [
-            self.s3Client.upload_byte(byte, name=f"{product_name}_{i}")
+            s3.upload_byte(byte, name=f"{product_name}_{i}")
             for i, byte in enumerate(variants)
         ]
 

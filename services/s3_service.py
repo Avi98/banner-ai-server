@@ -11,11 +11,11 @@ class S3Service:
     def __init__(self):
         self.client = boto3.client(
             "s3",
-            aws_access_key_id=get_settings().aws_access_key_id,
-            aws_secret_access_key=get_settings().aws_secret_access_key,
-            region_name=get_settings().aws_region,
+            aws_access_key_id=get_settings().AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=get_settings().AWS_SECRET_ACCESS_KEY,
+            region_name=get_settings().AWS_REGION,
         )
-        self.bucket_name = get_settings().s3_bucket_name
+        self.bucket_name = get_settings().S3_BUCKET_NAME
 
     def generate_s3_key(self, banner_name: str, platform: str) -> str:
         """Generate unique S3 key for banner"""
@@ -43,7 +43,7 @@ class S3Service:
                     Key=s3_key,
                     Body=image_data,
                     ContentType=content_type,
-                    CacheControl="max-age=31536000",  # 1 year cache
+                    CacheControl="max-age=31536000",
                     Metadata={
                         "uploaded_at": datetime.now().isoformat(),
                         "service": "banner-generator",
@@ -51,7 +51,7 @@ class S3Service:
                 ),
             )
 
-            aws_region = get_settings().aws_region
+            aws_region = get_settings().AWS_REGION
 
             url = f"https://{self.bucket_name}.s3.{aws_region}.amazonaws.com/{s3_key}"
             return url
