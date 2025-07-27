@@ -78,11 +78,9 @@ class ProductBase(BaseModel):
     product_images: List[str] = Field(
         default_factory=list, description="List of product image URLs"
     )
-    product_id: Optional[str] = Field(
-        default=None, description="Unique product identifier"
-    )
+    product_id: int = Field(default=None, description="Unique product identifier")
+    sku: int = Field(default=None, description="Stock keeping unit")
     brand: Optional[str] = Field(default="", description="Brand name of the product")
-    sku: Optional[str] = Field(default=None, description="Stock keeping unit")
     gtin: Optional[str] = Field(default="", description="Global Trade Item Number")
     mpn: Optional[str] = Field(default="", description="Manufacturer Part Number")
 

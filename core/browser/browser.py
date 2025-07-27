@@ -192,19 +192,29 @@ class Browser:
     async def get_screenshot(self):
         """Returns base64 encoded screenshot of the current page"""
 
+        await self.page.wait_for_load_state("load") 
+
         cdp_session = await self.get_cdp_session()
         screenshot_params = {
             "format": "png",
-            "fromSurface": False,
+            "fromSurface": True,
             "captureBeyondViewPort": False,
         }
+        try:
+            screenshot_data = await cdp_session.send(
+                "Page.captureScreenshot", screenshot_params
+            )
+            screenshot_b64 = screenshot_data["data"]
+        except Exception as e:
+            self.logger.warning(f"CDP screenshot failed: {e}, using Playwright API.")
+            try:
+                screenshot_bytes = await self.page.screenshot(type="png")
+                screenshot_b64 = base64.b64encode(screenshot_bytes).decode()
+            except Exception as e2:
+                self.logger.error(f"Playwright screenshot also failed: {e2}")
+                return None
 
-        screenshot_data = await cdp_session.send(
-            "Page.captureScreenshot", screenshot_params
-        )
-        screenshot_b64 = screenshot_data["data"]
         if self.screenshot_scale_factor is None:
-
             test_img_data = base64.b64decode(screenshot_b64)
             test_img = Image.open(io.BytesIO(test_img_data))
             self.logger.info(f"Test image size: {test_img.size}")

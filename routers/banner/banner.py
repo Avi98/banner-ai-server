@@ -23,7 +23,13 @@ async def crawl_product_page(
     )
     try:
         agent = ProductAgent()
-        bannerService = BannerService(db)
+
+        from services.banner_variant_service import BannerVariantService
+        from services.s3_service import S3Service
+
+        bannerService = BannerService(
+            db, s3_fact=S3Service, variation_service=BannerVariantService()
+        )
 
         return await bannerService.get_product_info(banner.productURL, agent)
     except SQLAlchemyError as sqlErr:
@@ -41,8 +47,12 @@ async def create_product_og_banner(
         __name__,
     )
     try:
+        from services.s3_service import S3Service
+        from services.banner_variant_service import BannerVariantService
 
-        banner = BannerService(db)
+        banner = BannerService(
+            db, s3_fact=S3Service, variation_service=BannerVariantService()
+        )
 
         banner_info_dump = og_banner_info.model_dump()
 

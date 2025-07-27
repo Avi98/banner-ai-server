@@ -1,15 +1,41 @@
 # Banner ai Server
 
-## Start server 
 
-```~~
+## Setup gcloud crenditals
+- gcloud crenditals are required for llm to work
 
-uv run uvicorn main:app --reload
-~~
+install gcloud cli based on OS from [here](https://cloud.google.com/sdk/docs/install) 
 
-Using SDXL Refiner (stabilityai/stable-diffusion-xl-refiner-1.0) for high-quality relighting
-Implementing proper depth map generation and normalization
-Using ControlNet with the depth map for more accurate lighting control
-Adding a specialized prompt for professional product photography
-Setting appropriate parameters for strength (0.6) to maintain product details while enhancing lighting
-o
+Run following cmd for Application Default Credendtials(ADC) 
+
+```gcloud auth application-default login```
+
+## Setup server 
+
+- Clone repo
+- Create virtual env using following cmd
+
+```
+uv venv
+```
+
+- Activate Virtual env
+
+```
+source .venv/bin/activate
+```
+
+- install chromium 
+
+```
+playwright install chromium --with-deps
+
+```
+
+### Run server
+
+```
+uv main:app --reload
+
+```
+-- 
