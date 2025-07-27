@@ -11,19 +11,16 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "banner_ai_server"
-    google_application_credentials: str = Field(
-        default="", description="Path to the Google Application Credentials JSON file"
-    )
-    google_project_id: str = Field(default="", description="Google Cloud Project ID")
-    google_server_location: str = Field(
+    GOOGLE_PROJECT_ID: str = Field(description="Google Cloud Project ID")
+    GOOGLE_SERVER_LOCATION: str = Field(
         default="", description="Google Cloud Server Location"
     )
 
     # aws S3
-    aws_region: str = Field(default="", description="AWS Region")
-    s3_bucket_name: str = Field(default="", description="S3 Bucket Name")
-    aws_access_key_id: str = Field(default="", description="AWS Access Key ID")
-    aws_secret_access_key: str = Field(default="", description="AWS Secret Access Key")
+    AWS_REGION: str = Field(default="", description="AWS Region")
+    S3_BUCKET_NAME: str = Field(default="", description="S3 Bucket Name")
+    AWS_ACCESS_KEY_ID: str = Field(default="", description="AWS Access Key ID")
+    AWS_SECRET_ACCESS_KEY: str = Field(default="", description="AWS Secret Access Key")
 
     # DB Configuration
     DB_HOST: str = Field(description="Database Host")
@@ -43,7 +40,8 @@ class Settings(BaseSettings):
         """
         Constructs and returns the database URL using the individual components
         """
-        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        # return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}"
 
 
 def get_settings() -> Settings:
