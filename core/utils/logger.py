@@ -1,6 +1,6 @@
+import sys
 import logging
 from logging.handlers import RotatingFileHandler
-import sys
 from typing import Optional
 
 
