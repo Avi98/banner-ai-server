@@ -220,7 +220,7 @@ class BannerService:
             ratings = str_to_float(product_info.get("ratings", "0"))
 
             product = Product(
-                uuid=product_info.get("product_id"),
+                # uuid=product_info.get("product_id"),
                 title=product_info.get("title", ""),
                 description=product_info.get("description", ""),
                 price=price,
@@ -231,7 +231,11 @@ class BannerService:
                 category=product_info.get("category", ""),
                 stock=product_info.get("stock", "inventory_not_found"),
                 ratings=ratings,
-                image_url=product_info.get("images", [""])[0],
+                image_url=(
+                    product_info.get("images", [""])[0]
+                    if len(product_info.get("images", [""])) > 1
+                    else ""
+                ),
                 product_url=product_info.get("product_url", ""),
                 feature_1=product_info.get("feature_1", ""),
                 feature_2=product_info.get("feature_2", ""),

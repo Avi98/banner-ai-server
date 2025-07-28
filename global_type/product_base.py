@@ -1,10 +1,10 @@
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, List
 from pydantic import Field
-from enum import Enum
+from enum import StrEnum
 
 
-class ProductIndustryEnum(str, Enum):
+class ProductIndustryEnum(StrEnum):
     FASHION = "fashion"
     ELECTRONICS = "electronics"
     HOME_DECOR = "home_decor"
@@ -13,13 +13,13 @@ class ProductIndustryEnum(str, Enum):
     FOOD_AND_BEVERAGE = "food_and_beverage"
 
 
-class Platform(str, Enum):
+class Platform(StrEnum):
     FACEBOOK = "facebook"
     INSTAGRAM = "INSTAGRAM"
     WHATSAPP = "WHATSAPP"
 
 
-class ProductTemplateEnum(str, Enum):
+class ProductTemplateEnum(StrEnum):
     MODERN = "modern"
     CLASSIC = "classic"
     MINIMALIST = "minimalist"
@@ -46,7 +46,7 @@ class ProductCreative(BaseModel):
 
 
 class ProductBase(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    # model_config = ConfigDict()
     name: str = Field(
         alias="product_name", description="Complete product name with specifications"
     )

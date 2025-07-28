@@ -1,0 +1,8 @@
+{
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#1A2B3C", // Deep blue-gray when window is focused
+    "titleBar.inactiveBackground": "#2C3E50", // Slightly lighter gray-blue when inactive
+    "titleBar.activeForeground": "#FFFFFF", // White text/icons for contrast
+    "titleBar.inactiveForeground": "#C0C0C0" // Light gray text/icons when unfocused
+  }
+}
