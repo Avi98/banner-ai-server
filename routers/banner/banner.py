@@ -28,14 +28,14 @@ async def crawl_product_page(
         from services.s3_service import S3Service
 
         bannerService = BannerService(
-            db, s3_fact=S3Service, variation_service=BannerVariantService()
+            db, s3_fact=S3Service(), variation_service=BannerVariantService()
         )
 
         return await bannerService.get_product_info(banner.productURL, agent)
     except SQLAlchemyError as sqlErr:
         logger.error(f"failed to save to db: {sqlErr}")
     except Exception as e:
-        raise HTTPException(status_code=500, details=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/create_product_og_banner")
@@ -51,16 +51,20 @@ async def create_product_og_banner(
         from services.banner_variant_service import BannerVariantService
 
         banner = BannerService(
-            db, s3_fact=S3Service, variation_service=BannerVariantService()
+            db, s3_fact=S3Service(), variation_service=BannerVariantService()
         )
 
         banner_info_dump = og_banner_info.model_dump()
+        product_info = banner_info_dump.get("product_info")
+        if product_info is None:
+            raise ValueError("product_info is missing")
 
-        return await banner.create_og_banner(
-            **banner_info_dump.get("product_info"),
+
+        return await banner.create_og_banner(  # type: ignore
+            **product_info,
         )
     except ValueError as ve:
         logger.error(f"validation error:{str(ve)}")
     except Exception as e:
         logger.error(f"error occured in create_product_og_banner:{e}")
-        raise HTTPException(status_code=500, details=str(e))
+        raise HTTPException(status_code=500, detail=str(e))

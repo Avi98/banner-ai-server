@@ -1,7 +1,8 @@
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-from typing import Optional
+from typing import Literal, Optional
+
 
 
 class Logger:
@@ -9,7 +10,7 @@ class Logger:
 
     @classmethod
     def get_logger(
-        cls, name: str = "app", log_file: Optional[str] = None, level=logging.INFO
+        cls, name: str = "app", log_file: Optional[str] = None, level: Literal["INFO", "DEBUG" ] = "INFO"
     ) -> logging.Logger:
         if cls._instance:
             return cls._instance
@@ -21,7 +22,6 @@ class Logger:
             cls._instance = logger
             return logger
 
-        # Formatter
         formatter = logging.Formatter(
             fmt="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",

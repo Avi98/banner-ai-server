@@ -17,11 +17,11 @@ class PromptGenerator(ABC):
 class ElectronicsPromptGenerator(PromptGenerator):
     def generate_prompt(self) -> str:
         prompt_args = {
-            "platform": self.product_info.get("platforms"),
-            "tagline": self.product_info.get("name"),
-            "main_title_emphasis": self.product_info.get("name"),
-            "sales_dates": self.product_info.get("product_sales", "not found"),
-            "discount_text": self.product_info.get("offer", "None"),
+            "platform": self.product_info.platform,
+            "tagline": self.product_info.name,
+            "main_title_emphasis": self.product_info.name,
+            "sales_dates": None,  # product_sales does not exist
+            "discount_text": self.product_info.offer,
         }
         return electronics_prompts(**prompt_args)
 
@@ -29,40 +29,36 @@ class ElectronicsPromptGenerator(PromptGenerator):
 class FashionPromptGenerator(PromptGenerator):
     def generate_prompt(self) -> str:
         prompt_args = {
-            "platform": self.product_info.get("platform"),
-            "bg_color": self.product_info.get("bg_color"),
-            "prod_color": self.product_info.get("prod_color"),
-            "product": self.product_info.get("product"),
-            "product_category": self.product_info.get("product_category"),
-            "ratings_cpy": self.product_info.get("ratings_cpy"),
-            "offer_cpy": self.product_info.get("offer_cpy"),
-            "theme": self.product_info.get("theme"),
+            "platform": self.product_info.platform,
+            "bg_color": None,  # bg_color does not exist
+            "prod_color": None,  # prod_color does not exist
+            "product": self.product_info.name,
+            "product_category": self.product_info.category,
+            "ratings_cpy": self.product_info.ratings,
+            "offer_cpy": self.product_info.offer,
+            "theme": self.product_info.template_type,
         }
         return get_fashion_banner(**prompt_args)
 
 
 class BeautyAndCosmeticsPromptGenerator(PromptGenerator):
     def generate_prompt(self) -> str:
-        # TODO: Implement beauty and cosmetics prompt generator
-        pass
+        raise NotImplementedError("Beauty and cosmetics prompt generator is not implemented")
 
 
 class FoodAndBeveragePromptGenerator(PromptGenerator):
     def generate_prompt(self) -> str:
-        # TODO: Implement food and beverage prompt generator
-        pass
+        raise NotImplementedError("Food and beverage prompt generator is not implemented")
 
 
 class HomeDecorPromptGenerator(PromptGenerator):
     def generate_prompt(self) -> str:
-        # TODO: Implement home decor prompt generator
-        pass
+        raise NotImplementedError("Home decor prompt generator is not implemented")
 
 
 class StationaryPromptGenerator(PromptGenerator):
     def generate_prompt(self) -> str:
-        # TODO: Implement stationary prompt generator
-        pass
+        raise NotImplementedError("Stationary prompt generator is not implemented")
 
 
 class IndustryPromptFactory:
@@ -83,8 +79,7 @@ class IndustryPromptFactory:
 
     def get_prompt(self, ind_type: ProductBase) -> str:
         """Get prompt for the given industry type using appropriate prompt generator"""
-        # generator_class = self._generators.get(ind_type.model_dump().get("category"))
-        category_enum = ProductIndustryEnum[ind_type.get("category")]
+        category_enum = ProductIndustryEnum[ind_type.category]
         generator_class = self._generators.get(category_enum)
 
         if not generator_class:

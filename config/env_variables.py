@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "banner_ai_server"
-    GOOGLE_PROJECT_ID: str = Field(description="Google Cloud Project ID")
-    GOOGLE_SERVER_LOCATION: str = Field(description="Google Cloud Server Location")
+    GOOGLE_PROJECT_ID: str = Field(default="", description="Google Cloud Project ID")
+    GOOGLE_SERVER_LOCATION: str = Field(default="", description="Google Cloud Server Location")
 
     # aws S3
     AWS_REGION: str = Field(default="", description="AWS Region")
@@ -21,11 +21,11 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str = Field(default="", description="AWS Secret Access Key")
 
     # DB Configuration
-    DB_HOST: str = Field(description="Database Host")
-    DB_PORT: str = Field(description="Database Port")
-    DB_USER: str = Field(description="Database User")
-    DB_PASSWORD: str = Field(description="Database Password")
-    DB_NAME: str = Field(description="Database Name")
+    DB_HOST: str = Field(default="", description="Database Host")
+    DB_PORT: str = Field(default="", description="Database Port")
+    DB_USER: str = Field(default="", description="Database User")
+    DB_PASSWORD: str = Field(default="", description="Database Password")
+    DB_NAME: str = Field(default="", description="Database Name")
     DATABASE_URL: str = Field(default="", description="Database URL")
 
     # cors

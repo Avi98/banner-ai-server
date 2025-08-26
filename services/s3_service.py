@@ -8,7 +8,7 @@ from config.env_variables import get_settings
 
 
 class S3Service:
-    def __init__(self):
+    def __init__(self) -> None:
         self.client = boto3.client(
             "s3",
             aws_access_key_id=get_settings().AWS_ACCESS_KEY_ID,
@@ -80,7 +80,7 @@ class S3Service:
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(
                 None,
-                lambda: self.s3_client.delete_object(
+                lambda: self.client.delete_object(
                     Bucket=self.bucket_name, Key=s3_key
                 ),
             )

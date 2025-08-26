@@ -1,13 +1,12 @@
 import asyncio
 import io
 import random
-from types import CoroutineType
-from typing import List
+from typing import List, Dict, Any
 from PIL import Image, ImageEnhance, ImageFilter
 
 
 class BannerVariantService:
-    def __init__(self):
+    def __init__(self) -> None:
         self.style_variations = {"subtle", "vibrant", "muted"}
         self.variation_dict = {
             "subtle": {
@@ -32,12 +31,12 @@ class BannerVariantService:
                 "smoothness": 0.5,
             },
         }
-        self.layout_variations = {}
+        self.layout_variations: dict[str, Any] = {}
 
-    def generate_variants(self, base_img: bytes, num_variant: int = 3) -> CoroutineType:
+    def generate_variants(self, base_img: bytes, num_variant: int = 3) -> List[asyncio.Task[bytes]]:
         base_pil = Image.open(io.BytesIO(base_img))
 
-        async def generate_var():
+        async def generate_var() -> bytes:
             style = random.choice(list(self.style_variations))
             seed = random.random()
 
@@ -49,7 +48,7 @@ class BannerVariantService:
 
         return [asyncio.create_task(generate_var()) for _ in range(num_variant)]
 
-    def _enhance_img(self, base_pil: Image.Image, style, seed):
+    def _enhance_img(self, base_pil: Image.Image, style: str, seed: float) -> Image.Image:
         """enhance image while preserving original content"""
 
         params = self._get_style_params(style)
@@ -67,7 +66,7 @@ class BannerVariantService:
 
         return enhanced
 
-    def _get_style_params(self, style):
+    def _get_style_params(self, style: str) -> Dict[str, float]:
         """returns random variant style"""
 
         def_style = self.variation_dict["subtle"]

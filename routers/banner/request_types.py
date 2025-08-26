@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Tuple, Optional, List
 
-from core.agent.types import ProductBase
+from global_type.product_base import ProductBase
 from utils.consts import EIGHT_MB, EIGHT_SECONDS_MS
 
 
@@ -16,7 +16,7 @@ class GetBannerPromptRequest(BaseModel):
     product_price: str
     product_category: str
     product_brand: str
-    product_metadata: dict
+    product_metadata: dict[str, str]
 
 
 class CreateOGBannerRequest(BaseModel):
@@ -26,4 +26,4 @@ class CreateOGBannerRequest(BaseModel):
 class CreateVedioScriptRequest(BaseModel):
     product_info: ProductBase
     aspect_ratio: str
-    duration: str = EIGHT_SECONDS_MS
+    duration: int = EIGHT_SECONDS_MS

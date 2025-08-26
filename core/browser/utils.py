@@ -30,7 +30,7 @@ def scale_b64_image(image_b64: str, scale_factor: float) -> str:
         new_height = int(height * scale_factor)
 
         # Resize the image using high quality resampling
-        resized_image = image.resize((new_width, new_height), Image.LANCZOS)
+        resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
         # Convert back to base64
         buffer = BytesIO()
