@@ -16,6 +16,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
 
   banner-ai-server:
     build:
@@ -28,3 +33,14 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: dockerfile
+    depends_on:
+      - banner-ai-server
+      - redis
+    command: celery -A config.celery_worker_config.celery_app worker --loglevel=info
+    env_file:
+      - .env

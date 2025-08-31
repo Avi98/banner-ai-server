@@ -3,10 +3,9 @@ from fastapi import FastAPI
 from config.get_db_session import init_db
 from routers.banner import banner
 from routers.vedio import routes
+from routers.chat import chat_route
 from middleware.cors import add_cors
 from contextlib import asynccontextmanager
-
-
 
 app = FastAPI(
     root_path="/api/v1",
@@ -49,3 +48,4 @@ app.include_router(
     banner.router,
 )
 app.include_router(routes.router)
+app.include_router(chat_route.router)

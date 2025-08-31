@@ -11,14 +11,17 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "banner_ai_server"
-    GOOGLE_PROJECT_ID: str = Field(default="", description="Google Cloud Project ID")
-    GOOGLE_SERVER_LOCATION: str = Field(default="", description="Google Cloud Server Location")
+    GOOGLE_PROJECT_ID: str = Field(
+        default="", description="Google Cloud Project ID")
+    GOOGLE_SERVER_LOCATION: str = Field(
+        default="", description="Google Cloud Server Location")
 
     # aws S3
     AWS_REGION: str = Field(default="", description="AWS Region")
     S3_BUCKET_NAME: str = Field(default="", description="S3 Bucket Name")
     AWS_ACCESS_KEY_ID: str = Field(default="", description="AWS Access Key ID")
-    AWS_SECRET_ACCESS_KEY: str = Field(default="", description="AWS Secret Access Key")
+    AWS_SECRET_ACCESS_KEY: str = Field(
+        default="", description="AWS Secret Access Key")
 
     # DB Configuration
     DB_HOST: str = Field(default="", description="Database Host")
@@ -28,10 +31,18 @@ class Settings(BaseSettings):
     DB_NAME: str = Field(default="", description="Database Name")
     DATABASE_URL: str = Field(default="", description="Database URL")
 
+    # redis
+    REDIS_HOST: str = Field(default="", description="Redis host")
+    REDIS_PORT: int = Field(default=6379, description="Redis port")
+
     # cors
     ALLOWED_ORIGIN: str = Field(
         default="http://localhost:3000", description="Origins allowed for headers"
     )
+
+    CELERY_BROKER_URL: str = Field(default="", description="Celery Broker URL")
+    CELERY_RESULT_BACKEND: str = Field(
+        default="", description="Celery Result Backend")
 
     @property
     def get_database_url(self) -> str:
