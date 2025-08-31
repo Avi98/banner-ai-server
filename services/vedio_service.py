@@ -1,18 +1,18 @@
 from typing import Optional
 
 
-from core.model.llm import init_veo, initialize_gemini, initialize_imagen
+from core.model.llm import init_veo
 from core.prompt.ad_script_prompt import get_ad_script_banner
 from core.utils.logger import Logger
-from routers.banner.request_types import CreateVedioScriptRequest
 from services.s3_storage_service import S3StorageService
 from global_type.product_base import ProductBase
+from langchain_core.prompt_values import PromptValue
 
 
 class VedioService:
     def __init__(
         self,
-        #  storage_service: S3StorageService
+         storage_service: S3StorageService
     ):
         """
         Initialize VedioService with a storage service
@@ -20,7 +20,7 @@ class VedioService:
             storage_service (S3StorageService): Service for handling object storage operations
         """
         self.logger = Logger.get_logger(__name__)
-        # self.storage_service = storage_service
+        self.storage_service = storage_service
         self.logger.info("VedioService initialized successfully")
         self._script = None
 
@@ -75,9 +75,10 @@ class VedioService:
             self.logger.error(f"Error saving video link to database: {str(e)}")
             return False
 
-    async def generate_add_script(self, product_info: Optional[ProductBase]) -> str:
+    async def generate_add_script(self, product_info: Optional[ProductBase]) -> PromptValue:
         prompt = get_ad_script_banner()
         # initialize_gemini(content=, )
+        return prompt
 
     async def create_vedio(self, prompt: str):
 

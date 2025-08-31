@@ -1,7 +1,9 @@
+from typing import Any
 from langchain.prompts import PromptTemplate
+from langchain_core.prompt_values import PromptValue
 
 
-def get_ad_script_banner(**kwargs):
+def get_ad_script_banner(**kwargs: dict[str, Any]) -> PromptValue:
     prompt = """
 You are a creative video scriptwriter for AI-generated promotional videos.
 
@@ -49,4 +51,4 @@ Inputs:
         template=prompt,
     )
 
-    return template.invoke(input=kwargs)
+    return template.invoke(input=kwargs) #type: ignore

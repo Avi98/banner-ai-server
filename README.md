@@ -35,7 +35,7 @@ playwright install chromium --with-deps
 ### Run server
 
 ```
-uv main:app --reload
+uvicorn main:app --reload
 
 ```
 -- 

@@ -1,5 +1,5 @@
 import os
-from typing import Dict
+from typing import Dict, Union
 from urllib.parse import unquote, urlparse
 import requests
 
@@ -13,7 +13,7 @@ def parse_file_name(url: str) -> str:
     return file_name
 
 
-def download_files(urls: list[str], destination: str) -> list[Dict[str, str]]:
+def download_files(urls: list[str], destination: str) -> list[Dict[str, Union[str, bool]]]:
     """Download files from the given URLs and save them to specified destination."""
     if not os.path.exists(destination):
         os.makedirs(destination)
@@ -21,7 +21,7 @@ def download_files(urls: list[str], destination: str) -> list[Dict[str, str]]:
     if not urls:
         raise ValueError("The list of URLs is empty. Please provide valid URLs.")
 
-    downloaded_files_paths = []
+    downloaded_files_paths: list[Dict[str, Union[str, bool]]] = []
 
     for url in urls:
         try:
@@ -42,7 +42,7 @@ def download_files(urls: list[str], destination: str) -> list[Dict[str, str]]:
     return downloaded_files_paths
 
 
-def save_files(out_dir: str, file_name: str, img_bytes):
+def save_files(out_dir: str, file_name: str, img_bytes: bytes) -> None:
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -50,6 +50,6 @@ def save_files(out_dir: str, file_name: str, img_bytes):
         f.write(img_bytes)
 
 
-def cleanup_files(path: str):
+def cleanup_files(path: str) -> None:
     # Delete files that has image
     pass

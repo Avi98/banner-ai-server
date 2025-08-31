@@ -1,30 +1,51 @@
-"""main app"""
-
 import sys
 from fastapi import FastAPI
 from config.get_db_session import init_db
 from routers.banner import banner
 from routers.vedio import routes
+from routers.chat import chat_route
+from middleware.cors import add_cors
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+app = FastAPI(
+    root_path="/api/v1",
+    title="Banner AI Server",
+    description="Banner AI Server for generating banners using LLMs",
+    version="0.1.0",
+)
 
 
-def receive_signal(signalNumber, frame):
+def receive_signal(signalNumber:str,):
     print("Received:", signalNumber)
     sys.exit()
 
 
-@app.on_event("startup")
-async def startup_event():
+# apply middleware
+add_cors(app)
+
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     await init_db()
 
     import signal
-
-    signal.signal(signal.SIGINT, receive_signal)
+    signal.signal(signal.SIGINT, receive_signal) # type: ignore
     # startup tasks
+
+    yield
+
+app = FastAPI(
+    root_path="/api/v1",
+    title="Banner AI Server",
+    description="Banner AI Server for generating banners using LLMs",
+    version="0.1.0",
+    lifespan=lifespan,
+)
 
 
 app.include_router(
     banner.router,
 )
 app.include_router(routes.router)
+app.include_router(chat_route.router)

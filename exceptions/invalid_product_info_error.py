@@ -5,5 +5,5 @@ class InvalidProductInfoError(Exception):
         super().__init__(message)
         self.message = message
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"InvalidProductInfoError: {self.message}"

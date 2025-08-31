@@ -9,12 +9,13 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     UUID as UUID_TYPE,
+    func,
 )
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class BannerVariant(Base):
@@ -35,7 +36,7 @@ class BannerVariant(Base):
     file_size = Column(Integer)
     preview_size = Column(Integer)
 
-    generation_time = Column(Float)
+    generation_time: Column[float] = Column(Float)
     status = Column(String(20), default="pending")
     error_message = Column(Text)
 
@@ -60,8 +61,8 @@ class Product(Base):
     description = Column(Text)
 
     # Price information
-    price = Column(Float)
-    regular_price = Column(Float)
+    price: Column[float] = Column(Float)
+    regular_price: Column[float] = Column(Float)
     currency = Column(String(10))
     offer = Column(String(100))
 
@@ -69,7 +70,7 @@ class Product(Base):
     brand = Column(String(100))
     category = Column(String(100))
     stock = Column(String(100))
-    ratings = Column(Float)
+    ratings: Column[float] = Column(Float)
 
     # URLs
     image_url = Column(String(500))

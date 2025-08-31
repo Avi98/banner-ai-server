@@ -1,22 +1,25 @@
-from encodings.base64_codec import base64_decode
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, TypedDict, Unpack
 from PIL import Image
 
-from core.agent.types import ProductAgentResponseType
 from core.browser.browser import Browser, BrowserConfig
 from core.prompt.product_info_prompt import get_product_prompt
 from core.utils.logger import Logger
 from core.model.llm import initialize_gemini as gemini_client
 from global_type.product_base import ProductBase
+from global_type.types import  PageMeta, HeadingDict
 
+logger = Logger.get_logger(__name__, level="INFO")
+class ProductInfoArg(TypedDict):
+    headers: HeadingDict
+    metadata: PageMeta
 
 class ProductAgent:
     """Agent calls llm and browser for fetching the missing product"""
 
-    def __init__(self):
-        self.logger = Logger.get_logger(__name__, level="INFO")
+    def __init__(self) -> None:
+        self.logger = logger
 
-    async def crawl_product_page(self, product_url: str):
+    async def crawl_product_page(self, product_url: str) -> Optional[dict[str, str]]:
 
         async with Browser(config=BrowserConfig()) as browser:
             if not await self._extract_page_content(browser, product_url):
@@ -24,7 +27,7 @@ class ProductAgent:
 
             product_info, headers, metadata = await self._extract_and_validate_data(
                 browser
-            )
+            ) or ({},{},{})
             if not all([product_info, headers, metadata]):
                 return {"error": "Failed to extract required information."}
 
@@ -32,24 +35,28 @@ class ProductAgent:
 
             product_image = await self._get_product_page_screenshot(browser)
             prompt = get_product_prompt()
-            response = gemini_client(
-                content=[product_image, prompt],
-                config={
-                    "response_mime_type": "application/json",
-                    # "response_schema": ProductBase,
-                    "responseModalities": ["TEXT"],
-                },
-            )
+            try:
+                response = gemini_client(
+                    content=[product_image, prompt], # type: ignore
+                    config={
+                        "response_mime_type": "application/json",
+                        "response_schema": ProductBase,
+                        "responseModalities": ["TEXT"],
+                    },
+                )
 
-            return self._get_product_info(
-                product_info,
-                model_json=response.text,
-                headers=headers,
-                metadata=metadata,
-            )
+                return self._get_product_info(
+                    product_info,
+                    model_json=response.text,
+                    headers=headers,
+                    metadata=metadata,
+                )
+
+            except Exception as e:
+                self.logger.error(f"erorr occured {e}")
 
     def _get_product_info(
-        self, product_info: Dict[str, Any], model_json: str, **product_metadata
+        self, product_info: Dict[str, Any], model_json: str, **product_metadata: ProductInfoArg
     ):
         model_response: Dict[str, str]
 
@@ -59,7 +66,7 @@ class ProductAgent:
             model_response = json.loads(model_json)
 
             # ProductBase.model_validate(model_response)
-        except Exception as E:
+        except Exception:
             raise Exception("Invalid llm model response for product base")
 
         return (
@@ -79,24 +86,24 @@ class ProductAgent:
     async def _extract_and_validate_data(
         self,
         browser: Browser,
-    ) -> Tuple[Optional[Dict], Optional[Dict], Optional[Dict]]:
+    ) -> Tuple[HeadingDict, PageMeta]:
         """Extract and validate all required data from the page."""
 
-        product_info = await browser.extract_product_info()
+        product_info:list[ProductBase] = await browser.extract_product_info()
 
         if not product_info:
             self.logger.error("Failed to extract product information.")
-            return None, None, None
+            return None
 
-        headers = await browser.extract_headers()
+        headers: HeadingDict = await browser.extract_headers()
         if not headers:
             self.logger.error("Failed to extract headers.")
-            return None, None, None
+            return None
 
-        metadata = await browser.extract_metadata()
+        metadata: PageMeta = await browser.extract_metadata()
         if not metadata:
             self.logger.error("Failed to extract metadata.")
-            return None, None, None
+            return None
 
         return product_info[0], headers, metadata
 

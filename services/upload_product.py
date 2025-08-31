@@ -36,7 +36,7 @@ class ProductImage:
 
             img_client = self.client({"prompt": prompt})
             return
-            save_files(out_dir, file_name="sample_banner_1", img_bytes=img_byes)
+            save_files(out_dir, file_name="sample_banner_1", img_bytes=img_bytes)
 
         except Exception as e:
             raise e

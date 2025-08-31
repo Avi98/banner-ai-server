@@ -20,5 +20,5 @@ class S3StorageService:
         )
         self.bucket_name = bucket_name
 
-    def generate_s3():
+    def generate_s3(self) -> None:
         pass

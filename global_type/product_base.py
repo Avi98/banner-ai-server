@@ -1,10 +1,9 @@
-from pydantic import BaseModel, Field, ConfigDict, field_validator
-from typing import Optional, List
-from pydantic import Field
-from enum import Enum
+from pydantic import BaseModel, Field,  field_validator
+from typing import Optional, List, Any
+from enum import StrEnum
 
 
-class ProductIndustryEnum(str, Enum):
+class ProductIndustryEnum(StrEnum):
     FASHION = "fashion"
     ELECTRONICS = "electronics"
     HOME_DECOR = "home_decor"
@@ -13,13 +12,13 @@ class ProductIndustryEnum(str, Enum):
     FOOD_AND_BEVERAGE = "food_and_beverage"
 
 
-class Platform(str, Enum):
+class Platform(StrEnum):
     FACEBOOK = "facebook"
     INSTAGRAM = "INSTAGRAM"
     WHATSAPP = "WHATSAPP"
 
 
-class ProductTemplateEnum(str, Enum):
+class ProductTemplateEnum(StrEnum):
     MODERN = "modern"
     CLASSIC = "classic"
     MINIMALIST = "minimalist"
@@ -46,7 +45,7 @@ class ProductCreative(BaseModel):
 
 
 class ProductBase(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    # model_config = ConfigDict()
     name: str = Field(
         alias="product_name", description="Complete product name with specifications"
     )
@@ -78,11 +77,9 @@ class ProductBase(BaseModel):
     product_images: List[str] = Field(
         default_factory=list, description="List of product image URLs"
     )
-    product_id: Optional[str] = Field(
-        default=None, description="Unique product identifier"
-    )
+    product_id: Optional[int] = Field(default=None, description="Unique product identifier")
+    sku: Optional[int] = Field(default=None, description="Stock keeping unit")
     brand: Optional[str] = Field(default="", description="Brand name of the product")
-    sku: Optional[str] = Field(default=None, description="Stock keeping unit")
     gtin: Optional[str] = Field(default="", description="Global Trade Item Number")
     mpn: Optional[str] = Field(default="", description="Manufacturer Part Number")
 
@@ -107,8 +104,8 @@ class ProductBase(BaseModel):
 
     @field_validator("category", mode="before")
     @classmethod
-    def clean_category(cls, v):
+    def clean_category(cls, v: Any) -> str:
         """Clean category enum string"""
         if isinstance(v, str) and v.startswith("ProductIndustryEnum."):
             return v.replace("ProductIndustryEnum.", "")
-        return v
+        return str(v)
