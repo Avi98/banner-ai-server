@@ -1,14 +1,19 @@
-
 from datetime import datetime
 from celery.result import AsyncResult as CeleryAsyncResult
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from langchain_core.messages import HumanMessage
 
+from core.agent.chat_banner.banner_from_chat import ChatAgentWorker
 from core.tasks.long_running_tasks import long_running_task
 from config.celery_worker_config import celery_app
 from core.utils.logger import Logger
 from models.message_model import Message
-from repository.chat_message_repository import add_message, get_chat_history, create_chat_room as create_room
+from repository.chat_message_repository import (
+    add_message,
+    get_chat_history,
+    create_chat_room as create_room,
+)
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -121,32 +126,66 @@ async def get() -> HTMLResponse:
     return HTMLResponse(html)
 
 
-@router.get('/create_room_id')
+@router.get("/create_room_id")
 async def create_chat_room() -> dict[str, str]:
     room_id: str = create_room()
     return {"room_id": room_id}
 
 
-@router.websocket('/chat-ws/{room_id}')
+@router.websocket("/chat-ws/{room_id}")
 async def chat_room(websocket: WebSocket, room_id: str):
-    logger = Logger.get_logger(name=__name__, )
+    logger = Logger.get_logger(
+        name=__name__,
+    )
     await websocket.accept()
 
     has_chat = get_chat_history(room_id)
 
-    if not has_chat is None:
+    if has_chat is not None:
         await websocket.send_json({"message": [m.model_dump() for m in has_chat]})
-        return
+        # return
 
     try:
+        worker = ChatAgentWorker()
+        graph = None
         while True:
             data = await websocket.receive_json()
             msg = Message(
                 sender=data["sender"],
                 text=data["text"],
-                timestamp=datetime.utcnow()  # type: ignore
+                timestamp=datetime.utcnow(),  # type: ignore
             )
             add_message(room_id, msg)
-            await websocket.send_json(msg.model_dump())
+
+            # if worker.get_complied_graph is None:
+            #     worker.get_graph()
+            #     message = HumanMessage(content=data["text"])
+
+            #     graph, response = worker.compile_graph(
+            #         thread_id=room_id, start_message=[message]
+            #     )
+            #     graph = graph
+
+            #     if response is not None:
+            #         await websocket.send_text(
+            #             f"{response.get('messages', [])[-1].content}"
+            #         )
+            #         return
+
+            worker.get_graph()
+
+            graph, response = worker.compile_graph(
+                thread_id=room_id, start_message=[HumanMessage(content=data["text"])]
+            )
+            assert graph is not None, "Graph not initialed"
+
+            # response = graph.invoke(
+            #     input=[HumanMessage(content=data["text"])],
+            #     config={"configurable": {"thread_id": room_id}},
+            # )
+            ai_message = response.get("messages", [])[-1]
+            print(response)
+
+            await websocket.send_text(f"{ai_message.content}")
     except WebSocketDisconnect:
-        logger.error(f"Websocket diconnected for room if {room_id}")
+        logger.error(f"Websocket disconnected for room if {room_id}")

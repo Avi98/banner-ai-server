@@ -10,6 +10,7 @@ class Settings(BaseSettings):
         extra="ignore", env_file=DOT_ENV_FILE, case_sensitive=True
     )
 
+    GOOGLE_API_KEY: str
     app_name: str = "banner_ai_server"
     GOOGLE_PROJECT_ID: str = Field(
         default="", description="Google Cloud Project ID")
